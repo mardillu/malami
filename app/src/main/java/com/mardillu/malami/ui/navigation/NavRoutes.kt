@@ -7,7 +7,11 @@ import androidx.annotation.DrawableRes
  * @author mardillu
  */
 sealed class NavRoutes(val route: String) {
-    object Login : NavRoutes("/login")
-    object Onboarding : NavRoutes("/onboarding")
-    object Home : NavRoutes("/home")
+    data object Login : NavRoutes("/login")
+    data object Onboarding : NavRoutes("/onboarding")
+    data object Home : NavRoutes("/home")
+    data object CourseList : NavRoutes("/course-list")
+    data object Modules : NavRoutes("/modules")
+    data object ModuleContent : NavRoutes("/module-content")
+
 }

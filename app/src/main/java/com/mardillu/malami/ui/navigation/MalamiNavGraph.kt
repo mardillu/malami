@@ -11,6 +11,9 @@ import androidx.navigation.compose.composable
 import com.mardillu.malami.ui.auth.AuthState
 import com.mardillu.malami.ui.auth.AuthViewModel
 import com.mardillu.malami.ui.auth.LoginSignupScreen
+import com.mardillu.malami.ui.courses.course_modules.ModuleContentScreen
+import com.mardillu.malami.ui.courses.course_modules.ModuleListScreen
+import com.mardillu.malami.ui.courses.list.CourseListScreen
 import com.mardillu.malami.ui.onboarding.OnboardingScreen
 
 /**
@@ -28,5 +31,22 @@ fun NavGraphBuilder.appNavGraph(navigation: AppNavigation){
 
     composable(NavRoutes.Onboarding.route) {
         OnboardingScreen(navigation, hiltViewModel())
+    }
+
+    composable(NavRoutes.CourseList.route) {
+        CourseListScreen(navigation, hiltViewModel())
+    }
+
+    composable("${NavRoutes.Modules.route}/{courseId}") { backStackEntry ->
+        val courseId = backStackEntry.arguments?.getString("courseId")
+        courseId?.let {
+            ModuleListScreen(navigation, courseId)
+        }
+    }
+    composable("${NavRoutes.ModuleContent.route}/{moduleId}") { backStackEntry ->
+        val moduleId = backStackEntry.arguments?.getString("moduleId")
+        moduleId?.let {
+            ModuleContentScreen(navigation, moduleId)
+        }
     }
 }

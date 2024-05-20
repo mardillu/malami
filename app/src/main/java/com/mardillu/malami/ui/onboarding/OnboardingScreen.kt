@@ -343,7 +343,8 @@ fun OnboardingScreen(
                 item {
                     Button(
                         onClick = {
-                            viewModel.savePreferences()
+                            navigation.gotToCourseList()
+                            //viewModel.savePreferences()
                         },
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.fillMaxWidth()

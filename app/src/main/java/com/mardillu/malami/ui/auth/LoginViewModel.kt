@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.mardillu.malami.data.PreferencesManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,22 +23,23 @@ import javax.inject.Inject
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val auth: FirebaseAuth,
-    private val firestore: FirebaseFirestore
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> get() = _authState
 
-    init {
-        checkAuthState()
-    }
+//    init {
+//        checkAuthState()
+//    }
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
             try {
                 _authState.value = AuthState.Loading
                 auth.signInWithEmailAndPassword(email, password).await()
-                _authState.value = AuthState.Authenticated
+                _authState.value = AuthState.Authenticated("login")
+                preferencesManager.isLoggedIn = true
             } catch (e: Exception) {
                 _authState.value = AuthState.Error(e.message ?: "Unknown error")
             }
@@ -54,7 +56,8 @@ class AuthViewModel @Inject constructor(
             try {
                 _authState.value = AuthState.Loading
                 auth.createUserWithEmailAndPassword(email, password).await()
-                _authState.value = AuthState.Authenticated
+                _authState.value = AuthState.Authenticated("signup")
+                preferencesManager.isLoggedIn = true
             } catch (e: Exception) {
                 _authState.value = AuthState.Error(e.message ?: "Unknown error")
             }
@@ -63,17 +66,36 @@ class AuthViewModel @Inject constructor(
 
     private fun checkAuthState() {
         if (auth.currentUser != null) {
-            _authState.value = AuthState.Authenticated
+            _authState.value = AuthState.Authenticated("")
         } else {
             _authState.value = AuthState.Unauthenticated
         }
     }
+
+    private fun checkLocalAuthState() {
+        if (preferencesManager.isLoggedIn && auth.currentUser != null) {
+            _authState.value = AuthState.Authenticated("")
+        } else {
+            _authState.value = AuthState.Unauthenticated
+        }
+    }
+
+    fun logout() {
+        auth.signOut()
+        preferencesManager.isLoggedIn = false
+        _authState.value = AuthState.Unauthenticated
+    }
 }
 
+
 sealed class AuthState {
-    object Idle : AuthState()
-    object Loading : AuthState()
-    object Authenticated : AuthState()
-    object Unauthenticated : AuthState()
+    data object Idle : AuthState()
+    data object Loading : AuthState()
+    data class Authenticated(val through: String) : AuthState()
+    data object Unauthenticated : AuthState()
     data class Error(val message: String) : AuthState()
+}
+
+enum class AuthType {
+    Email, Google
 }

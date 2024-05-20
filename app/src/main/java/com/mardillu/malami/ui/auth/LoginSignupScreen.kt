@@ -166,8 +166,11 @@ fun LoginSignupScreen(
             }
         }
         is AuthState.Authenticated -> {
-            // maybe redirect to the onboarding screen or main screen if already onboaded
-            navigation.goToOnboarding()
+            if ((authState as AuthState.Authenticated).through == "login") {
+                navigation.gotToCourseList()
+            } else if ((authState as AuthState.Authenticated).through == "signup") {
+                navigation.goToOnboarding()
+            }
         }
         else -> {
 

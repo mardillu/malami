@@ -32,6 +32,24 @@ class AppNavigation(
         }
     }
 
+    fun gotToCourseList() {
+        navController.navigate(NavRoutes.CourseList.route) {
+            popUpTo(0) { inclusive = true }
+        }
+    }
+
+    fun goToModuleList(courseId: String) {
+        navController.navigate("${NavRoutes.Modules.route}/$courseId") {
+            //popUpTo(0) { inclusive = true }
+        }
+    }
+
+    fun goToModuleContent(courseId: String, moduleId: String) {
+        navController.navigate("${NavRoutes.ModuleContent.route}/$moduleId") {
+            //popUpTo(0) { inclusive = true }
+        }
+    }
+
 
 //    fun gotoForgotPassword() {
 //        navController.navigate(NavRoutes.ForgotPassword.route) {
