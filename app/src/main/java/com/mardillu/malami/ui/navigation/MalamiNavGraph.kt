@@ -13,6 +13,7 @@ import com.mardillu.malami.ui.auth.AuthViewModel
 import com.mardillu.malami.ui.auth.LoginSignupScreen
 import com.mardillu.malami.ui.courses.course_modules.ModuleContentScreen
 import com.mardillu.malami.ui.courses.course_modules.ModuleListScreen
+import com.mardillu.malami.ui.courses.create.CreateCourseScreen
 import com.mardillu.malami.ui.courses.list.CourseListScreen
 import com.mardillu.malami.ui.onboarding.OnboardingScreen
 
@@ -48,5 +49,12 @@ fun NavGraphBuilder.appNavGraph(navigation: AppNavigation){
         moduleId?.let {
             ModuleContentScreen(navigation, moduleId)
         }
+    }
+
+    composable(NavRoutes.CreateCourse.route) {
+        CreateCourseScreen(
+            navigation,
+            hiltViewModel()
+        )
     }
 }

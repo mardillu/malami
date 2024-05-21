@@ -23,16 +23,11 @@ class OnboardingViewModel @Inject constructor(
     var learningStyle by mutableStateOf("")
     var paceOfLearning by mutableStateOf("")
     var studyTime by mutableStateOf("")
-    var studyEnvironment by mutableStateOf("")
-    var deviceUsage by mutableStateOf("")
-    var contentFormat by mutableStateOf("")
+    //var contentFormat by mutableStateOf("")
     var readingSpeed by mutableStateOf("")
     var difficultyLevel by mutableStateOf("")
-    var topicsOfInterest by mutableStateOf("")
-    var learningGoals by mutableStateOf("")
-    var priorKnowledge by mutableStateOf("")
     var feedbackType by mutableStateOf("")
-    var assessmentPreferences by mutableStateOf("")
+    //var assessmentPreferences by mutableStateOf("")
     var specialRequirements by mutableStateOf("")
 
     var showSuccessToast by mutableStateOf(false)
@@ -44,16 +39,11 @@ class OnboardingViewModel @Inject constructor(
             learningStyle = learningStyle,
             paceOfLearning = paceOfLearning,
             studyTime = studyTime,
-            studyEnvironment = studyEnvironment,
-            deviceUsage = deviceUsage,
-            contentFormat = contentFormat,
+            //contentFormat = contentFormat,
             readingSpeed = readingSpeed,
             difficultyLevel = difficultyLevel,
-            topicsOfInterest = topicsOfInterest,
-            learningGoals = learningGoals,
-            priorKnowledge = priorKnowledge,
             feedbackType = feedbackType,
-            assessmentPreferences = assessmentPreferences,
+            //assessmentPreferences = assessmentPreferences,
             specialRequirements = specialRequirements
         )
 

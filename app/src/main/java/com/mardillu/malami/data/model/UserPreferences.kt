@@ -8,15 +8,15 @@ data class UserPreferences(
     val learningStyle: String,
     val paceOfLearning: String,
     val studyTime: String,
-    val studyEnvironment: String,
-    val deviceUsage: String,
-    val contentFormat: String,
+    //val contentFormat: String,
     val readingSpeed: String,
     val difficultyLevel: String,
-    val topicsOfInterest: String,
+    val feedbackType: String,
+    //val assessmentPreferences: String,
+    val specialRequirements: String
+)
+
+data class UserCoursePreferences(
     val learningGoals: String,
     val priorKnowledge: String,
-    val feedbackType: String,
-    val assessmentPreferences: String,
-    val specialRequirements: String
 )

@@ -50,6 +50,12 @@ class AppNavigation(
         }
     }
 
+    fun gotoCreateCourse() {
+        navController.navigate(NavRoutes.CreateCourse.route) {
+            //popUpTo(0) { inclusive = true }
+        }
+    }
+
 
 //    fun gotoForgotPassword() {
 //        navController.navigate(NavRoutes.ForgotPassword.route) {

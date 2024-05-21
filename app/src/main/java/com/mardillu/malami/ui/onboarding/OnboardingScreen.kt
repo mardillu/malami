@@ -10,9 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -24,8 +26,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.rememberNavController
 import com.mardillu.malami.ui.navigation.AppNavigation
 import com.mardillu.malami.utils.ShowErrorDialog
 import com.mardillu.malami.utils.ShowToast
@@ -59,6 +66,24 @@ fun OnboardingScreen(
             TopAppBar(
                 title = { Text("Onboarding Questionnaire") }
             )
+        },
+        bottomBar = {
+            BottomAppBar(
+                containerColor = Color.Transparent,
+                contentColor =  Color.Transparent,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Button(
+                    onClick = {
+                        viewModel.savePreferences()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Submit")
+                }
+            }
         },
         content = {
             LazyColumn(
@@ -134,63 +159,6 @@ fun OnboardingScreen(
                             modifier = Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Text("Preferred Study Environment:")
-                            RadioButtonGroup(
-                                options = listOf("Quiet", "Background Music", "Interactive"),
-                                selectedOption = viewModel.studyEnvironment,
-                                onOptionSelected = { viewModel.studyEnvironment = it }
-                            )
-                        }
-                    }
-                }
-
-                item {
-                    Card(
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Text("Preferred Device for Study:")
-                            RadioButtonGroup(
-                                options = listOf("Desktop/Laptop", "Tablet", "Mobile Phone"),
-                                selectedOption = viewModel.deviceUsage,
-                                onOptionSelected = { viewModel.deviceUsage = it }
-                            )
-                        }
-                    }
-                }
-
-                item {
-                    Card(
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Text("Preferred Content Format:")
-                            RadioButtonGroup(
-                                options = listOf("Text-based", "Multimedia", "Interactive"),
-                                selectedOption = viewModel.contentFormat,
-                                onOptionSelected = { viewModel.contentFormat = it }
-                            )
-                        }
-                    }
-                }
-
-                item {
-                    Card(
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
                             Text("Reading Speed:")
                             RadioButtonGroup(
                                 options = listOf("Fast", "Medium", "Slow"),
@@ -229,91 +197,11 @@ fun OnboardingScreen(
                             modifier = Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Text("Topics of Interest:")
-                            TextField(
-                                value = viewModel.topicsOfInterest,
-                                onValueChange = { viewModel.topicsOfInterest = it },
-                                placeholder = { Text("Enter topics") },
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
-                }
-
-                item {
-                    Card(
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Text("Learning Goals:")
-                            TextField(
-                                value = viewModel.learningGoals,
-                                onValueChange = { viewModel.learningGoals = it },
-                                placeholder = { Text("Enter goals") },
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
-                }
-
-                item {
-                    Card(
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Text("Prior Knowledge:")
-                            RadioButtonGroup(
-                                options = listOf("Beginner", "Intermediate", "Advanced"),
-                                selectedOption = viewModel.priorKnowledge,
-                                onOptionSelected = { viewModel.priorKnowledge = it }
-                            )
-                        }
-                    }
-                }
-
-                item {
-                    Card(
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
                             Text("Preferred Feedback Type:")
                             RadioButtonGroup(
                                 options = listOf("Immediate", "Delayed"),
                                 selectedOption = viewModel.feedbackType,
                                 onOptionSelected = { viewModel.feedbackType = it }
-                            )
-                        }
-                    }
-                }
-
-                item {
-                    Card(
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Text("Assessment Preferences:")
-                            RadioButtonGroup(
-                                options = listOf("Multiple-choice quizzes", "Short-answer questions", "Practical assignments", "Projects"),
-                                selectedOption = viewModel.assessmentPreferences,
-                                onOptionSelected = { viewModel.assessmentPreferences = it }
                             )
                         }
                     }
@@ -337,19 +225,6 @@ fun OnboardingScreen(
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
-                    }
-                }
-
-                item {
-                    Button(
-                        onClick = {
-                            navigation.gotToCourseList()
-                            //viewModel.savePreferences()
-                        },
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Submit")
                     }
                 }
             }
