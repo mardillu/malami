@@ -1,6 +1,7 @@
 package com.mardillu.malami.ui.onboarding
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,9 +11,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -21,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.mardillu.malami.ui.navigation.AppNavigation
+import com.mardillu.malami.utils.AppAlertDialog
 import com.mardillu.malami.utils.ShowErrorDialog
 import com.mardillu.malami.utils.ShowToast
 
@@ -47,20 +56,9 @@ fun OnboardingScreen(
     navigation: AppNavigation,
     viewModel: OnboardingViewModel,
     ) {
-    val showSuccessToast by remember { mutableStateOf(viewModel.showSuccessToast) }
-    val showErrorDialog by remember { mutableStateOf(viewModel.showErrorDialog) }
-    val errorMessage by remember { mutableStateOf(viewModel.errorMessage) }
 
-    if (showSuccessToast) {
-        ShowToast("Preferences saved successfully")
-        viewModel.showSuccessToast = false
-    }
+    val createCourseState by viewModel.onboardState.collectAsState()
 
-    if (showErrorDialog) {
-        ShowErrorDialog(message = errorMessage) {
-            viewModel.showErrorDialog = false
-        }
-    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -230,6 +228,37 @@ fun OnboardingScreen(
             }
         }
     )
+
+    when (createCourseState) {
+        is OnboardState.Loading -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+
+        is OnboardState.Success -> {
+            navigation.gotToCourseList()
+        }
+
+        is OnboardState.Error -> {
+            AppAlertDialog(
+                dialogText = (createCourseState as OnboardState.Error).message,
+                onDismissRequest = {
+                    viewModel.setOnboardStateIdle()
+                },
+                onConfirmation = {
+                    viewModel.setOnboardStateIdle()
+                },
+                icon = Icons.Default.Info
+            )
+        }
+
+        OnboardState.Idle -> {}
+    }
 }
 
 @Composable

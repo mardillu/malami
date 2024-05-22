@@ -26,12 +26,6 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun providePreferencesRepository(firestore: FirebaseFirestore): PreferencesRepository {
-        return PreferencesRepository(firestore)
-    }
-
-    @Provides
-    @Singleton
     fun provideFirebaseAuth() = FirebaseAuth.getInstance()
 
     @Provides

@@ -11,7 +11,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mardillu.malami.data.model.UserPreferences
 import com.mardillu.malami.data.repository.PreferencesRepository
+import com.mardillu.malami.ui.courses.create.CreateCourseState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -19,6 +22,9 @@ import javax.inject.Inject
 class OnboardingViewModel @Inject constructor(
     private val preferencesRepository: PreferencesRepository
 ) : ViewModel() {
+
+    private val _onboardState = MutableStateFlow<OnboardState>(OnboardState.Idle)
+    val onboardState: StateFlow<OnboardState> get() = _onboardState
 
     var learningStyle by mutableStateOf("")
     var paceOfLearning by mutableStateOf("")
@@ -30,11 +36,8 @@ class OnboardingViewModel @Inject constructor(
     //var assessmentPreferences by mutableStateOf("")
     var specialRequirements by mutableStateOf("")
 
-    var showSuccessToast by mutableStateOf(false)
-    var showErrorDialog by mutableStateOf(false)
-    var errorMessage by mutableStateOf("")
-
     fun savePreferences() {
+        _onboardState.value = OnboardState.Loading
         val userPreferences = UserPreferences(
             learningStyle = learningStyle,
             paceOfLearning = paceOfLearning,
@@ -48,13 +51,38 @@ class OnboardingViewModel @Inject constructor(
         )
 
         viewModelScope.launch {
+            if (
+                learningStyle.isEmpty() ||
+                paceOfLearning.isEmpty() ||
+                studyTime.isEmpty() ||
+                //contentFormat.isEmpty() ||
+                readingSpeed.isEmpty() ||
+                difficultyLevel.isEmpty() ||
+                feedbackType.isEmpty() ||
+                //assessmentPreferences.isEmpty() ||
+                specialRequirements.isEmpty()
+            ) {
+                _onboardState.value = OnboardState.Error("Please fill in all fields.")
+                return@launch
+            }
             val result = preferencesRepository.saveUserPreferences(userPreferences)
             if (result.isSuccess) {
-                showSuccessToast = true
+                _onboardState.value = OnboardState.Success
             } else {
-                errorMessage = result.exceptionOrNull()?.message.orEmpty()
-                showErrorDialog = true
+                _onboardState.value = OnboardState.Error(result.exceptionOrNull()?.message ?: "Unknown error")
             }
         }
     }
+
+    fun setOnboardStateIdle() {
+        _onboardState.value = OnboardState.Idle
+    }
+}
+
+
+sealed class OnboardState {
+    data object Success : OnboardState()
+    data object Idle : OnboardState()
+    data object Loading : OnboardState()
+    data class Error(val message: String) : OnboardState()
 }

@@ -1,3 +1,5 @@
+import java.util.Properties
+
 //plugins {
 //    alias(libs.plugins.android.application)
 //    alias(libs.plugins.jetbrains.kotlin.android)
@@ -34,13 +36,29 @@ android {
         }
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     buildTypes {
+        val localProperties = Properties().apply {
+            val localPropertiesFile = rootProject.file("local.properties")
+            if (localPropertiesFile.exists()) {
+                localPropertiesFile.inputStream().use { load(it) }
+            }
+        }
+        val apiKey: String = localProperties.getProperty("GEMINI_API_KEY") ?: ""
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "GEMINI_API_KEY", apiKey)
+        }
+
+        debug {
+            buildConfigField("String", "GEMINI_API_KEY", apiKey)
         }
     }
     compileOptions {
@@ -85,6 +103,7 @@ dependencies {
     implementation(libs.androidx.compose.runtime.livedata)
     implementation(libs.androidx.compose.runtime)
     implementation(libs.org.jetbrains.kotlinx.coroutines.core)
+    implementation(libs.generativeai)
     kapt(libs.kapt)
     kapt(libs.hilt.kapt)
     testImplementation(libs.junit)

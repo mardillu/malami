@@ -1,3 +1,5 @@
+import java.util.Properties
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     dependencies {
@@ -15,4 +17,18 @@ plugins {
     alias(libs.plugins.com.google.perf) apply false
 
     //alias(libs.plugins.com.google.firebase.crashlytics) apply false
+}
+
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { load(it) }
+    }
+}
+
+val apiKey: String = localProperties.getProperty("GEMINI_API_KEY") ?: ""
+
+subprojects {
+    // Pass the API_KEY to all subprojects
+    extra["GEMINI_API_KEY"] = apiKey
 }

@@ -1,17 +1,21 @@
 package com.mardillu.malami.ui.courses.create
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -43,7 +47,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
+import com.mardillu.malami.BuildConfig
+import com.mardillu.malami.ui.onboarding.OnboardState
 import com.mardillu.malami.ui.onboarding.RadioButtonGroup
+import com.mardillu.malami.utils.AppAlertDialog
 
 /**
  * Created on 20/05/2024 at 10:47 pm
@@ -83,7 +90,8 @@ fun CreateCourseScreen(navigation: AppNavigation,
             ) {
                 Button(
                     onClick = {
-                        viewModel.createCourse(subject, learningGoals, priorKnowledge)
+                        viewModel.createPrompt(subject, priorKnowledge, learningGoals)
+                        viewModel.createCourse(subject, learningGoals, priorKnowledge, BuildConfig.GEMINI_API_KEY)
                     },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
@@ -92,7 +100,7 @@ fun CreateCourseScreen(navigation: AppNavigation,
             }
         },
         content = {
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .padding(it)
                     .padding(16.dp)
@@ -100,92 +108,126 @@ fun CreateCourseScreen(navigation: AppNavigation,
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.Start
             ) {
-                Text(
-                    text = "What do you want to learn?",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                TextField(
-                    value = subject,
-                    onValueChange = { subject = it },
-                    label = { Text("Subject") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
-                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(
-                        FocusDirection.Down) }),
-                    colors = TextFieldDefaults.colors(
-                        //backgroundColor = MaterialTheme.colorScheme.surface
+                item {
+                    Text(
+                        text = "What do you want to learn?",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
                     )
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "State your learning goals for this subject",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                TextField(
-                    value = learningGoals,
-                    onValueChange = { learningGoals = it },
-                    label = { Text("Learning Goals") },
-                    modifier = Modifier.fillMaxWidth()
-                        .height(150.dp),
-                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
-                    colors = TextFieldDefaults.colors(
-                        //backgroundColor = MaterialTheme.colorScheme.surface
-                    ),
-                    singleLine = false,
-                    maxLines = 5
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Prior Knowledge:",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Card(
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        //Text("Prior Knowledge:")
-                        RadioButtonGroup(
-                            options = listOf("Beginner", "Intermediate", "Advanced"),
-                            selectedOption = priorKnowledge,
-                            onOptionSelected = { priorKnowledge = it }
+                }
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                item {
+                    TextField(
+                        value = subject,
+                        onValueChange = { subject = it },
+                        label = { Text("Subject") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(
+                            FocusDirection.Down) }),
+                        colors = TextFieldDefaults.colors(
+                            //backgroundColor = MaterialTheme.colorScheme.surface
                         )
-                    }
+                    )
                 }
 
-                when (createCourseState) {
-                    CreateCourseState.Loading -> {
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                item {
+                    Text(
+                        text = "State your learning goals for this subject",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                item {
+                    TextField(
+                        value = learningGoals,
+                        onValueChange = { learningGoals = it },
+                        label = { Text("Learning Goals") },
+                        modifier = Modifier.fillMaxWidth()
+                            .height(150.dp),
+                        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                        colors = TextFieldDefaults.colors(
+                            //backgroundColor = MaterialTheme.colorScheme.surface
+                        ),
+                        singleLine = false,
+                        maxLines = 5
+                    )
+                }
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+                item {
+                    Text(
+                        text = "Prior Knowledge:",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                item {
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            //Text("Prior Knowledge:")
+                            RadioButtonGroup(
+                                options = listOf("Beginner", "Intermediate", "Advanced"),
+                                selectedOption = priorKnowledge,
+                                onOptionSelected = { priorKnowledge = it }
+                            )
+                        }
+                    }
+                }
+            }
+
+            when (createCourseState) {
+                CreateCourseState.Loading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
                         CircularProgressIndicator()
                     }
-                    is CreateCourseState.Success -> {
-                        Text(
-                            text = "Course created successfully!",
-                            color = Color.Green,
-                            fontSize = 16.sp,
-                            modifier = Modifier.padding(top = 16.dp)
-                        )
-                    }
-                    is CreateCourseState.Error -> {
-                        Text(
-                            text = "Error creating course: ${(createCourseState as CreateCourseState.Error).message}",
-                            color = Color.Red,
-                            fontSize = 16.sp,
-                            modifier = Modifier.padding(top = 16.dp)
-                        )
-                    }
-                    else -> {}
                 }
+                is CreateCourseState.Success -> {
+                    Text(
+                        text = "Course created successfully!",
+                        color = Color.Green,
+                        fontSize = 16.sp,
+                        modifier = Modifier.padding(top = 16.dp)
+                    )
+                }
+                is CreateCourseState.Error -> {
+                    AppAlertDialog(
+                        dialogText = "Error creating course: ${(createCourseState as CreateCourseState.Error).message}",
+                        onDismissRequest = {
+                            viewModel.setCreateCourseStateIdle()
+                        },
+                        onConfirmation = {
+                            viewModel.setCreateCourseStateIdle()
+                        },
+                        icon = Icons.Default.Info
+                    )
+                }
+                else -> {}
             }
         }
     )

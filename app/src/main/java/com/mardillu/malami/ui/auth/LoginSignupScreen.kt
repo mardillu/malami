@@ -3,6 +3,7 @@ package com.mardillu.malami.ui.auth
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -169,7 +170,13 @@ fun LoginSignupScreen(
 
     when (authState) {
         is AuthState.Loading -> {
-            CircularProgressIndicator()
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
         }
         is AuthState.Error -> {
             val errorMessage = (authState as AuthState.Error).message
