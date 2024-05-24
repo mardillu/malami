@@ -6,6 +6,7 @@ coreKtx = "1.13.1"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
+kotlinxSerializationJson = "1.6.3"
 lifecycleRuntimeKtx = "2.8.0"
 lifecycleViewModelCompose = "2.8.0"
 activityCompose = "1.9.0"
@@ -46,6 +47,7 @@ androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navig
 com-google-accompanist-navigation-animation = { group = "com.google.accompanist", name = "accompanist-navigation-animation", version.ref = "accompanist" }
 com-google-firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore-ktx" }
 com-google-firebase-auth = { group = "com.google.firebase", name = "firebase-auth-ktx" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 org-jetbrains-kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinCoroutines" }
 com-google-firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 org-jacoco-core = { group = "org.jacoco", name = "org.jacoco.core", version.ref = "jacocoVersion" }

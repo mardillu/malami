@@ -7,13 +7,17 @@ import com.google.ai.client.generativeai.type.HarmCategory
 import com.google.ai.client.generativeai.type.SafetySetting
 import com.google.ai.client.generativeai.type.content
 import com.google.ai.client.generativeai.type.generationConfig
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.mardillu.malami.data.model.course.Course
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 /**
  * Created on 21/05/2024 at 10:35 pm
  * @author mardillu
  */
-class CoursesRepository @Inject constructor() {
+class CoursesRepository @Inject constructor(private val firestore: FirebaseFirestore) {
 
     suspend fun createCourse(prompt: String, geminiApiKey: String): Result<GenerateContentResponse> {
         val model = GenerativeModel(
@@ -47,6 +51,20 @@ class CoursesRepository @Inject constructor() {
         //println(response.text)
         // Alternatively
         //println(response.candidates.first().content.parts.first().asTextOrNull())
+    }
+
+    suspend fun saveCourse(course: Course): Result<Unit>  {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
+
+        return try {
+            firestore.collection("courses")
+                .document(userId)
+                .set(course)
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }
 

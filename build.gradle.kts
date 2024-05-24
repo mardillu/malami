@@ -15,6 +15,8 @@ plugins {
     alias(libs.plugins.com.google.gms.services) apply false
     alias(libs.plugins.com.android.library) apply false
     alias(libs.plugins.com.google.perf) apply false
+    kotlin("plugin.serialization") version "1.9.0" apply false
+
 
     //alias(libs.plugins.com.google.firebase.crashlytics) apply false
 }

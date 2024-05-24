@@ -6,13 +6,14 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.ai.client.generativeai.type.GenerateContentResponse
+import com.mardillu.malami.data.model.course.Course
 import com.mardillu.malami.data.repository.CoursesRepository
 import com.mardillu.malami.data.repository.PreferencesRepository
-import com.mardillu.malami.ui.onboarding.OnboardState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 /**
@@ -28,23 +29,18 @@ class CreateCourseViewModel @Inject constructor(
     private val _createCourseState = MutableStateFlow<CreateCourseState>(CreateCourseState.Idle)
     val createCourseState: StateFlow<CreateCourseState> get() = _createCourseState
 
-    var userPrompt by mutableStateOf("")
+    private var userPrompt by mutableStateOf("")
 
-    fun createCourse(subject: String, learningGoals: String, priorKnowledge: String, geminiAPIKey: String) {
-        if (subject.isBlank() || learningGoals.isBlank() || priorKnowledge.isBlank() || userPrompt.isBlank()) {
-            _createCourseState.value = CreateCourseState.Error("All fields are required")
-            return
-        }
-
+    private fun createCourse(geminiAPIKey: String) {
         viewModelScope.launch {
-            _createCourseState.value = CreateCourseState.Loading
             try {
-                val course = courseRepository.createCourse(userPrompt, geminiAPIKey)
-                course.getOrNull().let {
+                val newCourse = courseRepository.createCourse(userPrompt, geminiAPIKey)
+                newCourse.getOrNull().let {
                     if (it?.text == null) {
                         _createCourseState.value = CreateCourseState.Error("Failed to create course")
                     } else {
-                        _createCourseState.value = CreateCourseState.Success(it)
+                        val course = Json.decodeFromString<Course>(it.text!!)
+                        saveCourse(course, it)
                     }
                 }
             } catch (e: Exception) {
@@ -53,7 +49,18 @@ class CreateCourseViewModel @Inject constructor(
         }
     }
 
-    fun createPrompt(subject: String, learningGoals: String, priorKnowledge: String) {
+    private fun saveCourse(course: Course, it: GenerateContentResponse) {
+        viewModelScope.launch {
+            val save = courseRepository.saveCourse(course)
+            if (save.isSuccess) {
+                _createCourseState.value = CreateCourseState.Success(it)
+            } else {
+                _createCourseState.value = CreateCourseState.Error("Failed to save course")
+            }
+        }
+    }
+
+    private fun createPrompt(subject: String, learningGoals: String, priorKnowledge: String, apiKey: String) {
         viewModelScope.launch {
             val userPreference = preferencesRepository.getUserPreferences()
             userPreference.getOrNull()?.let {
@@ -65,12 +72,12 @@ class CreateCourseViewModel @Inject constructor(
                         Special Requirements: ${it.specialRequirements}]. The course should be divided into sections, 
                         and each section into modules whose content can be as long as possible. Create the full content 
                         for each of the modules for the person to read, (not bullet point guides). 
-                        Your response should be in json and should exactly match this json structure:
+                        Your response should be in json, the json keys should be in camel case and the json should exactly match this json structure:
                         {
                             title: title,
-                            short_description: short description,
-                            course_outline: *course outline in markdown*,
-                            learning_schedule: {
+                            shortDescription: short description,
+                            courseOutline: *course outline in markdown*,
+                            learningSchedule: {
                                 time: 5:30 PM,
                                 frequency: daily or weekly,
                                 day: day of week, or null of daily
@@ -78,11 +85,11 @@ class CreateCourseViewModel @Inject constructor(
                             sections:[
                                 {
                                     title: title,
-                                    short_description: short description,
+                                    shortDescription: short description,
                                     modules: [
                                         {
                                             title: title,
-                                            short_description: short description,
+                                            shortDescription: short description,
                                             content: module content in markdown,
                                         }
                                     ]
@@ -100,6 +107,7 @@ class CreateCourseViewModel @Inject constructor(
                 """.trimIndent()
 
                 userPrompt = prompt
+                createCourse(apiKey)
             } ?: run {
                 _createCourseState.value = CreateCourseState.Error("Failed to get user preferences: ${userPreference.exceptionOrNull()?.message}")
             }
@@ -108,6 +116,17 @@ class CreateCourseViewModel @Inject constructor(
 
     fun setCreateCourseStateIdle() {
         _createCourseState.value = CreateCourseState.Idle
+    }
+
+    fun onCreateCourseClicked(subject: String, learningGoals: String, priorKnowledge: String, apiKey: String) {
+        _createCourseState.value = CreateCourseState.Loading
+        if (subject.isBlank() || learningGoals.isBlank() || priorKnowledge.isBlank()) {
+            _createCourseState.value = CreateCourseState.Error("All fields are required")
+            return
+        }
+        viewModelScope.launch {
+            val prompt = createPrompt(subject, learningGoals, priorKnowledge, apiKey)
+        }
     }
 }
 

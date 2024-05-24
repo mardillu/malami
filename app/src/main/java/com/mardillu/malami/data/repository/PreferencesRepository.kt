@@ -35,7 +35,7 @@ class PreferencesRepository @Inject constructor(private val firestore: FirebaseF
                 .get()
                 .await()
 
-            return if (!userPreferences.exists()) {
+            return if (userPreferences.exists()) {
                 val settings = UserPreferences(
                     learningStyle = userPreferences["learningStyle"] as String,
                     paceOfLearning = userPreferences["paceOfLearning"] as String,

@@ -17,6 +17,7 @@ plugins {
     id("dagger.hilt.android.plugin")
     id("com.google.gms.google-services")
     id("jacoco")
+    kotlin("plugin.serialization")
 }
 
 android {
@@ -104,6 +105,7 @@ dependencies {
     implementation(libs.androidx.compose.runtime)
     implementation(libs.org.jetbrains.kotlinx.coroutines.core)
     implementation(libs.generativeai)
+    implementation(libs.kotlinx.serialization.json)
     kapt(libs.kapt)
     kapt(libs.hilt.kapt)
     testImplementation(libs.junit)

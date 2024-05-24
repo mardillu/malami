@@ -90,8 +90,7 @@ fun CreateCourseScreen(navigation: AppNavigation,
             ) {
                 Button(
                     onClick = {
-                        viewModel.createPrompt(subject, priorKnowledge, learningGoals)
-                        viewModel.createCourse(subject, learningGoals, priorKnowledge, BuildConfig.GEMINI_API_KEY)
+                        viewModel.onCreateCourseClicked(subject, priorKnowledge, learningGoals, BuildConfig.GEMINI_API_KEY)
                     },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
