@@ -44,8 +44,8 @@ class AppNavigation(
         }
     }
 
-    fun goToModuleContent(courseId: String, moduleId: String) {
-        navController.navigate("${NavRoutes.ModuleContent.route}/$moduleId") {
+    fun goToModuleContent(courseId: String, moduleId: String, sectionId: String) {
+        navController.navigate("${NavRoutes.ModuleContent.route}/$moduleId/$sectionId/$courseId") {
             //popUpTo(0) { inclusive = true }
         }
     }

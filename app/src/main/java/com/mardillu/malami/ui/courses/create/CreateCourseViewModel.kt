@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import java.util.UUID
 import javax.inject.Inject
 
 /**
@@ -49,7 +50,7 @@ class CreateCourseViewModel @Inject constructor(
                 userPrompt = prompt
                 createCourse(apiKey)
             } ?: run {
-                _createCourseState.value = CreateCourseState.Error("Failed to get user preferences: ${userPreferenceResult.exceptionOrNull()?.message}")
+                _createCourseState.value = CreateCourseState.Error("Failed to get user preferences.")
             }
         }
     }
@@ -82,6 +83,7 @@ class CreateCourseViewModel @Inject constructor(
                                 title: title,
                                 shortDescription: short description,
                                 content: module content in markdown,
+                                timeToRead: estimated reading time (eg. 5 mins),
                             }
                         ]
                         quiz: [ // 5 or more questions

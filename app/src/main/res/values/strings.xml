@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Malami</string>
+    <string name="hide">Hide</string>
+    <string name="show">Show</string>
 </resources>

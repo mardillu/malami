@@ -106,6 +106,7 @@ dependencies {
     implementation(libs.org.jetbrains.kotlinx.coroutines.core)
     implementation(libs.generativeai)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.markdown.core)
     kapt(libs.kapt)
     kapt(libs.hilt.kapt)
     testImplementation(libs.junit)

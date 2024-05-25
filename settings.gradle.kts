@@ -14,6 +14,8 @@ pluginManagement {
         eachPlugin {
             if(requested.id.id == "dagger.hilt.android.plugin") {
                 useModule("com.google.dagger:hilt-android-gradle-plugin:2.51")
+            } else if(requested.id.id == "org.jetbrains.annotations") {
+                useModule("org.jetbrains:annotations:23.0.0")
             }
         }
     }

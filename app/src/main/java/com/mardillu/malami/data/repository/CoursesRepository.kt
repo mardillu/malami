@@ -9,12 +9,19 @@ import com.google.ai.client.generativeai.type.content
 import com.google.ai.client.generativeai.type.generationConfig
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
+import com.mardillu.malami.data.model.UserPreferences
 import com.mardillu.malami.data.model.course.Course
 import com.mardillu.malami.data.model.course.LearningSchedule
+import com.mardillu.malami.data.model.course.Module
+import com.mardillu.malami.data.model.course.Quiz
 import com.mardillu.malami.data.model.course.Section
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -23,6 +30,9 @@ import javax.inject.Inject
  * @author mardillu
  */
 class CoursesRepository @Inject constructor(private val firestore: FirebaseFirestore) {
+    private val _userCoursesFlow = MutableStateFlow<List<Course>>(emptyList())
+    val userCoursesFlow: StateFlow<List<Course>> get() = _userCoursesFlow
+    private var listenerRegistration: ListenerRegistration? = null
 
     suspend fun createCourse(prompt: String, geminiApiKey: String): Result<GenerateContentResponse> {
         val model = GenerativeModel(
@@ -82,7 +92,31 @@ class CoursesRepository @Inject constructor(private val firestore: FirebaseFires
                 .await()
 
             if (courses.exists()) {
-                //val courseList = courses["courses"] as List<Course>
+                val sectionsList = (courses["sections"] as List<Map<String, Any>>).map { sectionMap ->
+                    val modulesList = (sectionMap["modules"] as List<Map<String, Any>>).map { moduleMap ->
+                        Module(
+                            content = moduleMap["content"] as String,
+                            shortDescription = moduleMap["shortDescription"] as String,
+                            title = moduleMap["title"] as String,
+                            //timeToRead = moduleMap["timeToRead"] as String
+                        )
+                    }
+
+                    val quizList = (sectionMap["quiz"] as List<Map<String, Any>>).map { quizMap ->
+                        Quiz(
+                            answer = quizMap["answer"] as String,
+                            options = (quizMap["options"] as List<String>),
+                            question = quizMap["question"] as String
+                        )
+                    }
+
+                    Section(
+                        modules = modulesList,
+                        quiz = quizList,
+                        shortDescription = sectionMap["shortDescription"] as String,
+                        title = sectionMap["title"] as String
+                    )
+                }
                 val course = Course(
                      courseOutline = courses["courseOutline"] as String,
                  shortDescription = courses["shortDescription"] as String,
@@ -92,7 +126,7 @@ class CoursesRepository @Inject constructor(private val firestore: FirebaseFires
                         time = (courses["learningSchedule"] as Map<String, String>) ["time"],
                         frequency = (courses["learningSchedule"] as Map<String, String>) ["frequency"]
                     ),
-                    sections =  courses["sections"] as List<Section>
+                    sections = sectionsList
                 )
                 Result.success(course)
             } else {
@@ -103,40 +137,68 @@ class CoursesRepository @Inject constructor(private val firestore: FirebaseFires
         }
     }
 
-    suspend fun getCoursesForUsers(userIds: List<String>): Result<Map<String, List<Course>>> = coroutineScope {
-        try {
-            val coursesMap = mutableMapOf<String, List<Course>>()
-            val list = mutableListOf<Course>()
+    fun startListeningForUserCourses(){
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
-            val deferredResults = userIds.map { userId ->
-                async {
-                    try {
-                        val courses = firestore.collection("courses")
-                            .document(userId)
-                            .get()
-                            .await()
+        listenerRegistration = firestore.collection("courses")
+            .document(userId)
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    _userCoursesFlow.value = emptyList()
+                    return@addSnapshotListener
+                }
 
-                        if (courses.exists()) {
-                            val course = courses["courses"] as Course
-                            list += course
-                        } else {
-                            coursesMap[userId] = emptyList()
+                if (snapshot != null && snapshot.exists()) {
+                    val sectionsList = (snapshot["sections"] as List<Map<String, Any>>).map { sectionMap ->
+                        val modulesList = (sectionMap["modules"] as List<Map<String, Any>>).map { moduleMap ->
+                            Module(
+                                content = moduleMap["content"] as String,
+                                shortDescription = moduleMap["shortDescription"] as String,
+                                title = moduleMap["title"] as String,
+                                //timeToRead = moduleMap["timeToRead"] as String
+                            )
                         }
-                    } catch (e: Exception) {
-                        // Handle individual user fetch error if needed
+
+                        val quizList = (sectionMap["quiz"] as List<Map<String, Any>>).map { quizMap ->
+                            Quiz(
+                                answer = quizMap["answer"] as String,
+                                options = (quizMap["options"] as List<String>),
+                                question = quizMap["question"] as String
+                            )
+                        }
+
+                        Section(
+                            modules = modulesList,
+                            quiz = quizList,
+                            shortDescription = sectionMap["shortDescription"] as String,
+                            title = sectionMap["title"] as String
+                        )
+                    }
+                    val course = Course(
+                        courseOutline = snapshot["courseOutline"] as String,
+                        shortDescription = snapshot["shortDescription"] as String,
+                        title = snapshot["title"] as String,
+                        learningSchedule = LearningSchedule(
+                            day = (snapshot["learningSchedule"] as Map<String, String>) ["day"],
+                            time = (snapshot["learningSchedule"] as Map<String, String>) ["time"],
+                            frequency = (snapshot["learningSchedule"] as Map<String, String>) ["frequency"]
+                        ),
+                        sections = sectionsList
+                    )
+                    _userCoursesFlow.update {
+                        listOf(course)
+                    }
+                } else {
+                    _userCoursesFlow.update {
+                        emptyList()
                     }
                 }
             }
-
-            // Await all async operations
-            deferredResults.awaitAll()
-
-            Result.success(coursesMap)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
     }
 
+    fun stopListeningForUserCourses() {
+        listenerRegistration?.remove()
+    }
 }
 
 //text("Create a complete course for a person with the following learning styles: [What do you want to learn?: product management; learning goals: I want to be able to get into product management at the end of the course; Prior Knowledge: Beginner; Preferred Learning Style: Visual; Pace of Learning: medium; Preferred Study Time: Evening; Reading Speed: slow: Difficulty Level of Reading Material: medium; Special Requirements: Having many examples and anecdotes help me learn better]. The course should be divided into sections, and each section into modules whose content can be as long as possible. Create the full content for each of the modules for the person to read, (not bullet point guides). Your response should be in json and should exactly match this json structure:\n                                {\n                                    title: title,\n                                    short_description: short description,\n                                    course_outline: *course outline in markdown*,\n                                    learning_schedule: {\n                                        time: 5:30 PM,\n                                        frequency: daily or weekly,\n                                        day: day of week, or null of daily\n                                    },\n                                    sections:[\n                                        {\n                                            title: title,\n                                            short_description: short description,\n                                            modules: [\n                                                {\n                                                    title: title,\n                                                    short_description: short description,\n                                                    content: module content in markdown,\n                                                }\n                                            ]\n                                            quiz: [\n                                                {\n                                                    question: question,\n                                                    options: [up to 5 options],\n                                                    answer: correct answer\n                                                }\n                                            ]\n                                        },\n                                    ]\n                                }")

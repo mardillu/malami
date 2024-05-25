@@ -41,14 +41,14 @@ fun NavGraphBuilder.appNavGraph(navigation: AppNavigation){
     composable("${NavRoutes.Modules.route}/{courseId}") { backStackEntry ->
         val courseId = backStackEntry.arguments?.getString("courseId")
         courseId?.let {
-            ModuleListScreen(navigation, courseId)
+            ModuleListScreen(navigation, courseId, hiltViewModel())
         }
     }
-    composable("${NavRoutes.ModuleContent.route}/{moduleId}") { backStackEntry ->
+    composable("${NavRoutes.ModuleContent.route}/{moduleId}/{sectionId}/{courseId}") { backStackEntry ->
         val moduleId = backStackEntry.arguments?.getString("moduleId")
-        moduleId?.let {
-            ModuleContentScreen(navigation, moduleId)
-        }
+        val sectionId = backStackEntry.arguments?.getString("sectionId")
+        val courseId = backStackEntry.arguments?.getString("courseId")
+        ModuleContentScreen(navigation, moduleId!!, sectionId!!, courseId!!, hiltViewModel())
     }
 
     composable(NavRoutes.CreateCourse.route) {

@@ -1,5 +1,6 @@
 [versions]
 agp = "8.4.1"
+core = "4.6.2"
 generativeai = "0.6.0"
 kotlin = "1.9.0"
 coreKtx = "1.13.1"
@@ -27,7 +28,14 @@ coroutinesCore = "1.8.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+markdown-core = { group = "io.noties.markwon", name = "core", version.ref = "core" }
+markdown-ext-autolink = { module = "io.noties.markwon:ext-autolink", version.ref = "core" }
+markdown-ext-strikethrough = { module = "io.noties.markwon:ext-strikethrough", version.ref = "core" }
+markdown-ext-tables = { module = "io.noties.markwon:ext-tables", version.ref = "core" }
+markdown-ext-tasklist = { module = "io.noties.markwon:ext-tasklist", version.ref = "core" }
 generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeai" }
+markdown-html = { module = "io.noties.markwon:html", version.ref = "core" }
+markdown-image = { module = "io.noties.markwon:image", version.ref = "core" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -48,6 +56,7 @@ com-google-accompanist-navigation-animation = { group = "com.google.accompanist"
 com-google-firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore-ktx" }
 com-google-firebase-auth = { group = "com.google.firebase", name = "firebase-auth-ktx" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+markdown-linkify = { module = "io.noties.markwon:linkify", version.ref = "core" }
 org-jetbrains-kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinCoroutines" }
 com-google-firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 org-jacoco-core = { group = "org.jacoco", name = "org.jacoco.core", version.ref = "jacocoVersion" }
@@ -58,6 +67,7 @@ hilt-kapt = { group = "com.google.dagger", name = "hilt-compiler", version.ref =
 androidx-compose-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "composeRuntime" }
 androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "composeRuntime" }
 org-jetbrains-kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutinesCore" }
+markdown-syntax-highlight = { module = "io.noties.markwon:syntax-highlight", version.ref = "core" }
 
 
 

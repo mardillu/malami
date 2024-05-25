@@ -68,7 +68,7 @@ fun CourseListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Travel Inspiration") },
+                title = { Text("Courses") },
                 navigationIcon = {
                     Icon(
                         painter = painterResource(R.drawable.ic_launcher_foreground),
@@ -109,24 +109,6 @@ fun CourseListContent(
     viewModel: CourseListViewModel
 ) {
     val courseList by viewModel.courseListState.collectAsState()
-
-    val items = listOf(
-        TravelItem(
-            painterResource(id = R.drawable.img),
-            "Finding Serenity",
-            "10 Tranquil Escapes for the Soul"
-        ),
-        TravelItem(
-            painterResource(id = R.drawable.img),
-            "List item title",
-            "List item subtitle"
-        ),
-        TravelItem(
-            painterResource(id = R.drawable.img),
-            "The Art of Slow Travel",
-            "Embrace the Journey, Not Just the Destination"
-        )
-    )
 
     val currentCourses = listOf(
         CurrentCourse(
@@ -198,7 +180,7 @@ fun TravelListItem(course: Course, navigation: AppNavigation,) {
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth()
             .clickable {
-                navigation.goToModuleList("1")
+                navigation.goToModuleList(course.id)
             },
         elevation = CardDefaults.cardElevation(2.dp)
     ) {

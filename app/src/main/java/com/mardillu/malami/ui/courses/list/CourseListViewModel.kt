@@ -3,6 +3,7 @@ package com.mardillu.malami.ui.courses.list
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.ai.client.generativeai.type.GenerateContentResponse
+import com.mardillu.malami.data.model.UserPreferences
 import com.mardillu.malami.data.model.course.Course
 import com.mardillu.malami.data.repository.CoursesRepository
 import com.mardillu.malami.data.repository.PreferencesRepository
@@ -26,11 +27,22 @@ class CourseListViewModel @Inject constructor(
     val courseListUIState: StateFlow<CourseListState> get() = _courseListUIState
 
     private val _courseListState = MutableStateFlow<List<Course>>(emptyList())
-    val courseListState: StateFlow<List<Course>> get() = _courseListState
+    val userCourses: StateFlow<List<Course>> get() = _courseListState
+
+    private val _userCourses = MutableStateFlow<List<Course>>(emptyList())
+    val courseListState: StateFlow<List<Course>> get() = _userCourses
 
     init {
-        getCourses()
+        viewModelScope.launch {
+            courseRepository.userCoursesFlow.collect { courses ->
+                _userCourses.update {
+                    courses
+                }
+            }
+        }
+        courseRepository.startListeningForUserCourses()
     }
+
     private fun getCourses() {
         viewModelScope.launch {
             val userCourses = courseRepository.getCourses()
@@ -47,6 +59,11 @@ class CourseListViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        courseRepository.stopListeningForUserCourses()
     }
 }
 
