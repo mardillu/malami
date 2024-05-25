@@ -6,6 +6,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class LearningSchedule(
     val day: String? = "",
-    val frequency: String,
-    val time: String
+    val frequency: String? = "",
+    val time: String? = ""
 )

@@ -37,6 +37,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,6 +51,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mardillu.malami.R
+import com.mardillu.malami.data.model.course.Course
 import com.mardillu.malami.ui.auth.AuthViewModel
 import com.mardillu.malami.ui.navigation.AppNavigation
 
@@ -60,7 +63,7 @@ import com.mardillu.malami.ui.navigation.AppNavigation
 @Composable
 fun CourseListScreen(
     navigation: AppNavigation,
-    viewModel: AuthViewModel
+    viewModel: CourseListViewModel
 ) {
     Scaffold(
         topBar = {
@@ -103,8 +106,10 @@ fun CourseListScreen(
 fun CourseListContent(
     paddingValues: PaddingValues,
     navigation: AppNavigation,
-    viewModel: AuthViewModel
+    viewModel: CourseListViewModel
 ) {
+    val courseList by viewModel.courseListState.collectAsState()
+
     val items = listOf(
         TravelItem(
             painterResource(id = R.drawable.img),
@@ -181,14 +186,14 @@ fun CourseListContent(
             )
         }
 
-        items(items) { item ->
-            TravelListItem(item, navigation)
+        items(courseList) { course ->
+            TravelListItem(course, navigation)
         }
     }
 }
 
 @Composable
-fun TravelListItem(item: TravelItem, navigation: AppNavigation) {
+fun TravelListItem(course: Course, navigation: AppNavigation,) {
     Card(
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth()
@@ -199,7 +204,7 @@ fun TravelListItem(item: TravelItem, navigation: AppNavigation) {
     ) {
         Column {
             Image(
-                painter = item.image,
+                painter = painterResource(id = R.drawable.img),
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -210,14 +215,18 @@ fun TravelListItem(item: TravelItem, navigation: AppNavigation) {
             Spacer(modifier = Modifier.height(8.dp))
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = item.title,
+                    text = course.title,
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = item.subtitle,
+                    text = course.shortDescription,
                     style = MaterialTheme.typography.bodyMedium,
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
