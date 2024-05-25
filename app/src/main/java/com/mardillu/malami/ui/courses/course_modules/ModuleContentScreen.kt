@@ -68,6 +68,7 @@ fun ModuleContentScreen(
         },
         content = {
             if (course != null && section != null && module != null) {
+                viewModel.updateModuleCompletedStatusById(courseId, sectionId, moduleId, true)
                 ModuleContent(moduleIndex!!, module, it)
             }
         }

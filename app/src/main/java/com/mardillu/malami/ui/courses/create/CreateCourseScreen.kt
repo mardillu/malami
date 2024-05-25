@@ -93,6 +93,7 @@ fun CreateCourseScreen(navigation: AppNavigation,
                         viewModel.onCreateCourseClicked(subject, priorKnowledge, learningGoals, BuildConfig.GEMINI_API_KEY)
                     },
                     modifier = Modifier.fillMaxWidth(),
+                    enabled = createCourseState != CreateCourseState.Loading
                 ) {
                     Text("Create Course")
                 }
@@ -185,7 +186,6 @@ fun CreateCourseScreen(navigation: AppNavigation,
                             modifier = Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            //Text("Prior Knowledge:")
                             RadioButtonGroup(
                                 options = listOf("Beginner", "Intermediate", "Advanced"),
                                 selectedOption = priorKnowledge,
@@ -213,10 +213,11 @@ fun CreateCourseScreen(navigation: AppNavigation,
                         fontSize = 16.sp,
                         modifier = Modifier.padding(top = 16.dp)
                     )
+                    navigation.back()
                 }
                 is CreateCourseState.Error -> {
                     AppAlertDialog(
-                        dialogText = "Error creating course: ${(createCourseState as CreateCourseState.Error).message}",
+                        dialogText = "Error creating course",
                         onDismissRequest = {
                             viewModel.setCreateCourseStateIdle()
                         },

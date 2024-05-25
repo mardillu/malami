@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -39,6 +40,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -108,13 +110,14 @@ fun ModuleListScreen(
                     .padding(it)
             ) {
                 if (course != null) {
-                    items(course.sections) { section ->
+                    itemsIndexed(course.sections) {sectionIndex, section ->
                         ExpandableListItem(
                             section.title,
                             section.modules,
                             course.title,
                             courseId,
                             section.id,
+                            sectionIndex,
                             navigation
                         )
                     }
@@ -131,6 +134,7 @@ fun ExpandableListItem(
     courseTitle: String,
     courseId: String,
     sectionId: String,
+    sectionIndex: Int,
     navigation: AppNavigation
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -160,13 +164,15 @@ fun ExpandableListItem(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(start = 16.dp),
+                        modifier = Modifier
+                            .padding(start = 16.dp)
+                            .weight(1f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(end = 16.dp),
-                    ) {
+                    Spacer(modifier = Modifier.width(8.dp)) // Add some space between the title and action text
+                    TextButton(onClick = {  expanded = !expanded }) {
                         Text(
                             text = if (expanded) stringResource(R.string.hide) else stringResource(
                                 R.string.show
@@ -175,30 +181,32 @@ fun ExpandableListItem(
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(end = 8.dp)
                         )
-
-                        IconButton(onClick = {
-                            expanded = !expanded
-                        }) {
-                            Icon(
-                                Icons.Default.KeyboardArrowDown,
-                                contentDescription = if (expanded) "Collapse" else "Expand",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .then(
-                                        if (expanded) Modifier.rotate(
-                                            180f
-                                        ) else Modifier
-                                    ),
-                            )
-                        }
+                        Icon(
+                            Icons.Default.KeyboardArrowDown,
+                            contentDescription = if (expanded) "Collapse" else "Expand",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .size(24.dp)
+                                .then(
+                                    if (expanded) Modifier.rotate(
+                                        180f
+                                    ) else Modifier
+                                ),
+                        )
                     }
                 }
 
                 if (expanded) {
-                    modules.forEach { module ->
-                        ModuleListItem(module, onClick = {
-                            navigation.goToModuleContent(courseId, module.id, sectionId)
+                    modules.forEachIndexed {i, module ->
+                        val moduleActive = if (module.completed || (sectionIndex ==0 && i == 0))
+                            true
+                        else {
+                            i != 0 && modules[i-1].completed
+                        }
+                        ModuleListItem(module, moduleActive, onClick = {
+                            if (moduleActive) {
+                                navigation.goToModuleContent(courseId, module.id, sectionId)
+                            }
                         })
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 0.dp, horizontal = 16.dp),
@@ -213,7 +221,7 @@ fun ExpandableListItem(
                             shortDescription = "Take the quiz to complete this section and move on to the next",
                             id = "",
                             content = ""
-                        ), onClick = {
+                        ), modules[modules.size-1].completed, onClick = {
                             //navigation.gotoQuiz(courseTitle, "3")
                         }
                     )
@@ -224,7 +232,7 @@ fun ExpandableListItem(
 }
 
 @Composable
-fun ModuleListItem(module: Module, onClick: () -> Unit) {
+fun ModuleListItem(module: Module, isModuleActive: Boolean, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -246,8 +254,8 @@ fun ModuleListItem(module: Module, onClick: () -> Unit) {
         ) {
             Text(
                 text = module.title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                style = if (isModuleActive) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
+                fontWeight = if (isModuleActive) FontWeight.Bold else FontWeight.Normal,
             )
             Text(
                 text = "5 Mins",
@@ -264,12 +272,12 @@ fun ModuleListItem(module: Module, onClick: () -> Unit) {
                 modifier = Modifier
                     .size(24.dp)
                     .background(
-                        if (true) Purple40 else Color.Gray,
+                        if (module.completed) Purple40 else Color.Gray,
                         shape = CircleShape
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                if (true) {
+                if (module.completed) {
                     Icon(
                         Icons.Filled.Check,
                         contentDescription = "Completed",

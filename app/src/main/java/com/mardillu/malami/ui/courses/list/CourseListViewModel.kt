@@ -8,6 +8,7 @@ import com.mardillu.malami.data.model.course.Course
 import com.mardillu.malami.data.repository.CoursesRepository
 import com.mardillu.malami.data.repository.PreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -43,27 +44,16 @@ class CourseListViewModel @Inject constructor(
         courseRepository.startListeningForUserCourses()
     }
 
-    private fun getCourses() {
-        viewModelScope.launch {
-            val userCourses = courseRepository.getCourses()
-            userCourses.getOrNull()?.let { courses ->
-                _courseListState.update {
-                    listOf(courses)
-                }
-                _courseListUIState.update {
-                    CourseListState.Success(listOf(courses))
-                }
-            } ?: run {
-                _courseListUIState.update {
-                    CourseListState.Error("Failed to get courses")
-                }
-            }
-        }
-    }
-
     override fun onCleared() {
         super.onCleared()
         courseRepository.stopListeningForUserCourses()
+    }
+
+    fun updateModuleCompletedStatusById(courseId: String, sectionId: String, moduleId: String, completed: Boolean) {
+        viewModelScope.launch {
+            delay(2 * 60 * 1000)
+            courseRepository.updateModuleCompletedStatusById(courseId, sectionId, moduleId, completed)
+        }
     }
 }
 

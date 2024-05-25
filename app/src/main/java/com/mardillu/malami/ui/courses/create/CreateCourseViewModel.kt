@@ -64,7 +64,7 @@ class CreateCourseViewModel @Inject constructor(
             Special Requirements: ${userPreference.specialRequirements}]. The course should be divided into sections, 
             and each section into modules whose content can be as long as possible. Create the full content 
             for each of the modules for the person to read, (not bullet point guides). 
-            Your response should be in json, the json keys should be in camel case and the json should exactly match this json structure:
+            Your response should be in json, you should escape any special characters like single and double quotes in the json, the json keys should be in camel case and the json should exactly match this json structure:
             {
                 title: title,
                 shortDescription: short description,

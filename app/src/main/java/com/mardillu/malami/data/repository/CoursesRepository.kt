@@ -82,61 +82,6 @@ class CoursesRepository @Inject constructor(private val firestore: FirebaseFires
         }
     }
 
-    suspend fun getCourses(): Result<Course> {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
-
-        return try {
-            val courses = firestore.collection("courses")
-                .document(userId)
-                .get()
-                .await()
-
-            if (courses.exists()) {
-                val sectionsList = (courses["sections"] as List<Map<String, Any>>).map { sectionMap ->
-                    val modulesList = (sectionMap["modules"] as List<Map<String, Any>>).map { moduleMap ->
-                        Module(
-                            content = moduleMap["content"] as String,
-                            shortDescription = moduleMap["shortDescription"] as String,
-                            title = moduleMap["title"] as String,
-                            //timeToRead = moduleMap["timeToRead"] as String
-                        )
-                    }
-
-                    val quizList = (sectionMap["quiz"] as List<Map<String, Any>>).map { quizMap ->
-                        Quiz(
-                            answer = quizMap["answer"] as String,
-                            options = (quizMap["options"] as List<String>),
-                            question = quizMap["question"] as String
-                        )
-                    }
-
-                    Section(
-                        modules = modulesList,
-                        quiz = quizList,
-                        shortDescription = sectionMap["shortDescription"] as String,
-                        title = sectionMap["title"] as String
-                    )
-                }
-                val course = Course(
-                     courseOutline = courses["courseOutline"] as String,
-                 shortDescription = courses["shortDescription"] as String,
-                 title = courses["title"] as String,
-                    learningSchedule = LearningSchedule(
-                        day = (courses["learningSchedule"] as Map<String, String>) ["day"],
-                        time = (courses["learningSchedule"] as Map<String, String>) ["time"],
-                        frequency = (courses["learningSchedule"] as Map<String, String>) ["frequency"]
-                    ),
-                    sections = sectionsList
-                )
-                Result.success(course)
-            } else {
-                Result.failure(Exception("Courses not found"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
     fun startListeningForUserCourses(){
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
@@ -152,15 +97,18 @@ class CoursesRepository @Inject constructor(private val firestore: FirebaseFires
                     val sectionsList = (snapshot["sections"] as List<Map<String, Any>>).map { sectionMap ->
                         val modulesList = (sectionMap["modules"] as List<Map<String, Any>>).map { moduleMap ->
                             Module(
+                                id = moduleMap["id"] as String,
                                 content = moduleMap["content"] as String,
                                 shortDescription = moduleMap["shortDescription"] as String,
                                 title = moduleMap["title"] as String,
-                                //timeToRead = moduleMap["timeToRead"] as String
+                                timeToRead = moduleMap["timeToRead"] as String,
+                                completed = moduleMap["completed"] as Boolean
                             )
                         }
 
                         val quizList = (sectionMap["quiz"] as List<Map<String, Any>>).map { quizMap ->
                             Quiz(
+                                id = quizMap["id"] as String,
                                 answer = quizMap["answer"] as String,
                                 options = (quizMap["options"] as List<String>),
                                 question = quizMap["question"] as String
@@ -168,6 +116,7 @@ class CoursesRepository @Inject constructor(private val firestore: FirebaseFires
                         }
 
                         Section(
+                            id = sectionMap["id"] as String,
                             modules = modulesList,
                             quiz = quizList,
                             shortDescription = sectionMap["shortDescription"] as String,
@@ -175,6 +124,7 @@ class CoursesRepository @Inject constructor(private val firestore: FirebaseFires
                         )
                     }
                     val course = Course(
+                        id = snapshot["id"] as String,
                         courseOutline = snapshot["courseOutline"] as String,
                         shortDescription = snapshot["shortDescription"] as String,
                         title = snapshot["title"] as String,
@@ -198,6 +148,39 @@ class CoursesRepository @Inject constructor(private val firestore: FirebaseFires
 
     fun stopListeningForUserCourses() {
         listenerRegistration?.remove()
+    }
+
+    fun updateModuleCompletedStatusById(courseId: String, sectionId: String, moduleId: String, newStatus: Boolean) {
+        val courseRef = firestore.collection("courses").document(courseId)
+
+        firestore.runTransaction { transaction ->
+            val snapshot = transaction.get(courseRef)
+            if (snapshot.exists()) {
+                // Get the sections array
+                val sections = snapshot.get("sections") as? List<Map<String, Any>> ?: emptyList()
+
+                val updatedSections = sections.map { section ->
+                    if (section["id"] == sectionId) {
+                        val modules = section["modules"] as? List<Map<String, Any>> ?: emptyList()
+                        val updatedModules = modules.map { module ->
+                            if (module["id"] == moduleId) {
+                                module.toMutableMap().apply { this["completed"] = newStatus }
+                            } else {
+                                module
+                            }
+                        }
+                        section.toMutableMap().apply { this["modules"] = updatedModules }
+                    } else {
+                        section
+                    }
+                }
+                transaction.update(courseRef, "sections", updatedSections)
+            }
+        }.addOnSuccessListener {
+            println("Module updated successfully.")
+        }.addOnFailureListener { e ->
+            println("Error updating module: ${e.message}")
+        }
     }
 }
 
