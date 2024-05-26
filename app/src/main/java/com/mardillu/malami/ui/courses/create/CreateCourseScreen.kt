@@ -1,7 +1,7 @@
 package com.mardillu.malami.ui.courses.create
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -19,36 +18,38 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.mardillu.malami.ui.navigation.AppNavigation
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.SecureFlagPolicy
 import com.mardillu.malami.BuildConfig
-import com.mardillu.malami.ui.onboarding.OnboardState
+import com.mardillu.malami.ui.animations.ScalingRotatingLoader
+import com.mardillu.malami.ui.navigation.AppNavigation
 import com.mardillu.malami.ui.onboarding.RadioButtonGroup
 import com.mardillu.malami.utils.AppAlertDialog
 
@@ -63,11 +64,17 @@ fun CreateCourseScreen(navigation: AppNavigation,
 ) {
 
     val focusManager = LocalFocusManager.current
-    var subject by remember { mutableStateOf("") }
-    var learningGoals by remember { mutableStateOf("") }
-    var priorKnowledge by remember { mutableStateOf("") }
+    var subject by rememberSaveable { mutableStateOf("") }
+    var learningGoals by rememberSaveable { mutableStateOf("") }
+    var priorKnowledge by rememberSaveable { mutableStateOf("") }
 
     val createCourseState by viewModel.createCourseState.collectAsState()
+
+    var showBottomSheet by rememberSaveable { mutableStateOf(false) }
+
+    if (showBottomSheet) {
+        AnimatedBottomSheet(onDismiss = { showBottomSheet = false })
+    }
 
     Scaffold(
         topBar = {
@@ -198,15 +205,10 @@ fun CreateCourseScreen(navigation: AppNavigation,
 
             when (createCourseState) {
                 CreateCourseState.Loading -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
+                    showBottomSheet = true
                 }
                 is CreateCourseState.Success -> {
+                    showBottomSheet = false
                     Text(
                         text = "Course created successfully!",
                         color = Color.Green,
@@ -216,8 +218,9 @@ fun CreateCourseScreen(navigation: AppNavigation,
                     navigation.back()
                 }
                 is CreateCourseState.Error -> {
+                    showBottomSheet = false
                     AppAlertDialog(
-                        dialogText = "Error creating course",
+                        dialogText = "Error creating course ${(createCourseState as CreateCourseState.Error).message}",
                         onDismissRequest = {
                             viewModel.setCreateCourseStateIdle()
                         },
@@ -227,10 +230,55 @@ fun CreateCourseScreen(navigation: AppNavigation,
                         icon = Icons.Default.Info
                     )
                 }
-                else -> {}
+                else -> {
+                    showBottomSheet = false
+                }
             }
         }
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AnimatedBottomSheet(onDismiss: () -> Unit) {
+    val bottomSheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
 
+    LaunchedEffect(Unit) {
+        bottomSheetState.show()
+    }
+
+    ModalBottomSheet(
+        sheetState = bottomSheetState,
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surface, shape = MaterialTheme.shapes.large)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                ScalingRotatingLoader()
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Creating your course...", style = MaterialTheme.typography.titleMedium)
+                Text("This can take up to 2 minutes", style = MaterialTheme.typography.bodyLarge)
+            }
+        },
+        onDismissRequest = {
+            onDismiss()
+        },
+        properties = ModalBottomSheetProperties(
+            shouldDismissOnBackPress = false,
+            isFocusable = true,
+            securePolicy = SecureFlagPolicy.Inherit
+        )
+    )
+
+    LaunchedEffect(bottomSheetState.currentValue) {
+//        if (bottomSheetState.currentValue == SheetValue.Hidden) {
+//            onDismiss()
+//        }
+    }
+}

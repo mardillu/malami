@@ -11,4 +11,5 @@ data class Module(
     val title: String,
     val timeToRead: String = "10 min",
     val completed: Boolean = false,
+    val bannerImage: String = "",
 )

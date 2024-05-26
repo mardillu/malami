@@ -10,9 +10,12 @@ import com.mardillu.malami.data.model.UserPreferences
 import com.mardillu.malami.data.model.course.Course
 import com.mardillu.malami.data.repository.CoursesRepository
 import com.mardillu.malami.data.repository.PreferencesRepository
+import com.mardillu.malami.ui.courses.list.CourseListState
+import com.mardillu.malami.utils.add
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import java.util.UUID
@@ -69,6 +72,7 @@ class CreateCourseViewModel @Inject constructor(
                 title: title,
                 shortDescription: short description,
                 courseOutline: *course outline in markdown*,
+                bannerImage: description of a suitable image for the course,
                 learningSchedule: {
                     time: 5:30 PM,
                     frequency: daily or weekly,
@@ -84,6 +88,7 @@ class CreateCourseViewModel @Inject constructor(
                                 shortDescription: short description,
                                 content: module content in markdown,
                                 timeToRead: estimated reading time (eg. 5 mins),
+                                bannerImage: description of a suitable image for the module
                             }
                         ]
                         quiz: [ // 5 or more questions
@@ -109,7 +114,7 @@ class CreateCourseViewModel @Inject constructor(
                         throw IllegalStateException("Failed to create course")
                     } else {
                         val course = Json.decodeFromString<Course>(it.text!!)
-                        saveCourse(course, it)
+                        getCourses(course, it)
                     }
                 }
             }.onFailure {
@@ -118,7 +123,7 @@ class CreateCourseViewModel @Inject constructor(
         }
     }
 
-    private fun saveCourse(course: Course, response: GenerateContentResponse) {
+    private fun saveCourse(course: List<Course>, response: GenerateContentResponse) {
         viewModelScope.launch {
             runCatching {
                 val saveResult = courseRepository.saveCourse(course)
@@ -135,6 +140,20 @@ class CreateCourseViewModel @Inject constructor(
 
     fun setCreateCourseStateIdle() {
         _createCourseState.value = CreateCourseState.Idle
+    }
+
+    private fun getCourses(course: Course, response: GenerateContentResponse) {
+        viewModelScope.launch {
+            val userCourses = courseRepository.getCourses()
+            userCourses.getOrNull()?.let { courses ->
+                val newCourses = courses.add(course)
+                saveCourse(newCourses, response)
+            } ?: run {
+                _createCourseState.update {
+                    CreateCourseState.Error("Failed to get courses")
+                }
+            }
+        }
     }
 }
 

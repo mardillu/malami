@@ -1,5 +1,6 @@
 package com.mardillu.malami.data.repository
 
+import android.util.Log
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.BlockThreshold
 import com.google.ai.client.generativeai.type.GenerateContentResponse
@@ -16,6 +17,7 @@ import com.mardillu.malami.data.model.course.LearningSchedule
 import com.mardillu.malami.data.model.course.Module
 import com.mardillu.malami.data.model.course.Quiz
 import com.mardillu.malami.data.model.course.Section
+import com.mardillu.malami.data.model.course.UserCourses
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -68,13 +70,13 @@ class CoursesRepository @Inject constructor(private val firestore: FirebaseFires
         //println(response.candidates.first().content.parts.first().asTextOrNull())
     }
 
-    suspend fun saveCourse(course: Course): Result<Unit>  {
+    suspend fun saveCourse(course: List<Course>): Result<Unit>  {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
 
         return try {
             firestore.collection("courses")
                 .document(userId)
-                .set(course)
+                .set(UserCourses(course))
                 .await()
             Result.success(Unit)
         } catch (e: Exception) {
@@ -94,49 +96,58 @@ class CoursesRepository @Inject constructor(private val firestore: FirebaseFires
                 }
 
                 if (snapshot != null && snapshot.exists()) {
-                    val sectionsList = (snapshot["sections"] as List<Map<String, Any>>).map { sectionMap ->
-                        val modulesList = (sectionMap["modules"] as List<Map<String, Any>>).map { moduleMap ->
-                            Module(
-                                id = moduleMap["id"] as String,
-                                content = moduleMap["content"] as String,
-                                shortDescription = moduleMap["shortDescription"] as String,
-                                title = moduleMap["title"] as String,
-                                timeToRead = moduleMap["timeToRead"] as String,
-                                completed = moduleMap["completed"] as Boolean
-                            )
-                        }
+                    val coursesList = (snapshot["courses"] as List<Map<String, Any>>).map { coursesMap ->
+                        val sectionsList =
+                            (coursesMap["sections"] as List<Map<String, Any>>).map { sectionMap ->
+                                val modulesList =
+                                    (sectionMap["modules"] as List<Map<String, Any>>).map { moduleMap ->
+                                        Module(
+                                            id = moduleMap["id"] as String,
+                                            content = moduleMap["content"] as String,
+                                            shortDescription = moduleMap["shortDescription"] as String,
+                                            title = moduleMap["title"] as String,
+                                            timeToRead = moduleMap["timeToRead"] as String,
+                                            completed = moduleMap["completed"] as Boolean,
+                                            bannerImage = moduleMap["bannerImage"] as String
+                                        )
+                                    }
 
-                        val quizList = (sectionMap["quiz"] as List<Map<String, Any>>).map { quizMap ->
-                            Quiz(
-                                id = quizMap["id"] as String,
-                                answer = quizMap["answer"] as String,
-                                options = (quizMap["options"] as List<String>),
-                                question = quizMap["question"] as String
-                            )
-                        }
+                                val quizList =
+                                    (sectionMap["quiz"] as List<Map<String, Any>>).map { quizMap ->
+                                        Quiz(
+                                            id = quizMap["id"] as String,
+                                            answer = quizMap["answer"] as String,
+                                            options = (quizMap["options"] as List<String>),
+                                            question = quizMap["question"] as String
+                                        )
+                                    }
 
-                        Section(
-                            id = sectionMap["id"] as String,
-                            modules = modulesList,
-                            quiz = quizList,
-                            shortDescription = sectionMap["shortDescription"] as String,
-                            title = sectionMap["title"] as String
+                                Section(
+                                    id = sectionMap["id"] as String,
+                                    modules = modulesList,
+                                    quiz = quizList,
+                                    shortDescription = sectionMap["shortDescription"] as String,
+                                    title = sectionMap["title"] as String
+                                )
+                            }
+                        val course = Course(
+                            id = coursesMap["id"] as String,
+                            courseOutline = coursesMap["courseOutline"] as String,
+                            shortDescription = coursesMap["shortDescription"] as String,
+                            title = coursesMap["title"] as String,
+                            learningSchedule = LearningSchedule(
+                                day = (coursesMap["learningSchedule"] as Map<String, String>)["day"],
+                                time = (coursesMap["learningSchedule"] as Map<String, String>)["time"],
+                                frequency = (coursesMap["learningSchedule"] as Map<String, String>)["frequency"]
+                            ),
+                            sections = sectionsList,
+                            bannerImage = coursesMap["bannerImage"] as String
                         )
+
+                        course
                     }
-                    val course = Course(
-                        id = snapshot["id"] as String,
-                        courseOutline = snapshot["courseOutline"] as String,
-                        shortDescription = snapshot["shortDescription"] as String,
-                        title = snapshot["title"] as String,
-                        learningSchedule = LearningSchedule(
-                            day = (snapshot["learningSchedule"] as Map<String, String>) ["day"],
-                            time = (snapshot["learningSchedule"] as Map<String, String>) ["time"],
-                            frequency = (snapshot["learningSchedule"] as Map<String, String>) ["frequency"]
-                        ),
-                        sections = sectionsList
-                    )
                     _userCoursesFlow.update {
-                        listOf(course)
+                        coursesList
                     }
                 } else {
                     _userCoursesFlow.update {
@@ -151,30 +162,41 @@ class CoursesRepository @Inject constructor(private val firestore: FirebaseFires
     }
 
     fun updateModuleCompletedStatusById(courseId: String, sectionId: String, moduleId: String, newStatus: Boolean) {
-        val courseRef = firestore.collection("courses").document(courseId)
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val courseRef = firestore.collection("courses").document(userId)
 
         firestore.runTransaction { transaction ->
             val snapshot = transaction.get(courseRef)
             if (snapshot.exists()) {
                 // Get the sections array
-                val sections = snapshot.get("sections") as? List<Map<String, Any>> ?: emptyList()
-
-                val updatedSections = sections.map { section ->
-                    if (section["id"] == sectionId) {
-                        val modules = section["modules"] as? List<Map<String, Any>> ?: emptyList()
-                        val updatedModules = modules.map { module ->
-                            if (module["id"] == moduleId) {
-                                module.toMutableMap().apply { this["completed"] = newStatus }
+                val courses = snapshot.get("courses") as? List<Map<String, Any>> ?: emptyList()
+                val updatedCourses = courses.map { course ->
+                    if (course["id"] == courseId) {
+                        val sections =
+                            course["sections"] as? List<Map<String, Any>> ?: emptyList()
+                        val updatedSections = sections.map { section ->
+                            if (section["id"] == sectionId) {
+                                val modules =
+                                    section["modules"] as? List<Map<String, Any>> ?: emptyList()
+                                val updatedModules = modules.map { module ->
+                                    if (module["id"] == moduleId) {
+                                        module.toMutableMap()
+                                            .apply { this["completed"] = newStatus }
+                                    } else {
+                                        module
+                                    }
+                                }
+                                section.toMutableMap().apply { this["modules"] = updatedModules }
                             } else {
-                                module
+                                section
                             }
                         }
-                        section.toMutableMap().apply { this["modules"] = updatedModules }
+                        course.toMutableMap().apply { this["sections"] = updatedSections }
                     } else {
-                        section
+                        course
                     }
                 }
-                transaction.update(courseRef, "sections", updatedSections)
+                transaction.update(courseRef, "courses", updatedCourses)
             }
         }.addOnSuccessListener {
             println("Module updated successfully.")
@@ -182,6 +204,77 @@ class CoursesRepository @Inject constructor(private val firestore: FirebaseFires
             println("Error updating module: ${e.message}")
         }
     }
+
+    suspend fun getCourses(): Result<List<Course>> {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
+
+        return try {
+            val courses = firestore.collection("courses")
+                .document(userId)
+                .get()
+                .await()
+
+            if (courses != null && courses.exists()) {
+                val coursesList = (courses["courses"] as List<Map<String, Any>>).map { coursesMap ->
+                    val sectionsList =
+                        (coursesMap["sections"] as List<Map<String, Any>>).map { sectionMap ->
+                            val modulesList =
+                                (sectionMap["modules"] as List<Map<String, Any>>).map { moduleMap ->
+                                    Module(
+                                        id = moduleMap["id"] as String,
+                                        content = moduleMap["content"] as String,
+                                        shortDescription = moduleMap["shortDescription"] as String,
+                                        title = moduleMap["title"] as String,
+                                        timeToRead = moduleMap["timeToRead"] as String,
+                                        completed = moduleMap["completed"] as Boolean,
+                                        bannerImage = moduleMap["bannerImage"] as String
+                                    )
+                                }
+
+                            val quizList =
+                                (sectionMap["quiz"] as List<Map<String, Any>>).map { quizMap ->
+                                    Quiz(
+                                        id = quizMap["id"] as String,
+                                        answer = quizMap["answer"] as String,
+                                        options = (quizMap["options"] as List<String>),
+                                        question = quizMap["question"] as String
+                                    )
+                                }
+
+                            Section(
+                                id = sectionMap["id"] as String,
+                                modules = modulesList,
+                                quiz = quizList,
+                                shortDescription = sectionMap["shortDescription"] as String,
+                                title = sectionMap["title"] as String
+                            )
+                        }
+                    val course = Course(
+                        id = coursesMap["id"] as String,
+                        courseOutline = coursesMap["courseOutline"] as String,
+                        shortDescription = coursesMap["shortDescription"] as String,
+                        title = coursesMap["title"] as String,
+                        learningSchedule = LearningSchedule(
+                            day = (coursesMap["learningSchedule"] as Map<String, String>)["day"],
+                            time = (coursesMap["learningSchedule"] as Map<String, String>)["time"],
+                            frequency = (coursesMap["learningSchedule"] as Map<String, String>)["frequency"]
+                        ),
+                        sections = sectionsList,
+                        bannerImage = coursesMap["bannerImage"] as String
+                    )
+
+                    course
+                }
+                Log.d("CoursesRepository", "getCourses: Looks good")
+                Result.success(coursesList)
+            } else {
+                Log.d("CoursesRepository", "getCourses: empty list. not bad")
+                Result.success(emptyList())
+            }
+        } catch (e: Exception) {
+            Log.d("CoursesRepository", "getCourses: $e")
+           Result.failure(e)
+        }
+    }
 }
 
-//text("Create a complete course for a person with the following learning styles: [What do you want to learn?: product management; learning goals: I want to be able to get into product management at the end of the course; Prior Knowledge: Beginner; Preferred Learning Style: Visual; Pace of Learning: medium; Preferred Study Time: Evening; Reading Speed: slow: Difficulty Level of Reading Material: medium; Special Requirements: Having many examples and anecdotes help me learn better]. The course should be divided into sections, and each section into modules whose content can be as long as possible. Create the full content for each of the modules for the person to read, (not bullet point guides). Your response should be in json and should exactly match this json structure:\n                                {\n                                    title: title,\n                                    short_description: short description,\n                                    course_outline: *course outline in markdown*,\n                                    learning_schedule: {\n                                        time: 5:30 PM,\n                                        frequency: daily or weekly,\n                                        day: day of week, or null of daily\n                                    },\n                                    sections:[\n                                        {\n                                            title: title,\n                                            short_description: short description,\n                                            modules: [\n                                                {\n                                                    title: title,\n                                                    short_description: short description,\n                                                    content: module content in markdown,\n                                                }\n                                            ]\n                                            quiz: [\n                                                {\n                                                    question: question,\n                                                    options: [up to 5 options],\n                                                    answer: correct answer\n                                                }\n                                            ]\n                                        },\n                                    ]\n                                }")

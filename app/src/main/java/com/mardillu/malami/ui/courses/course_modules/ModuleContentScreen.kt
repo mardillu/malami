@@ -41,7 +41,8 @@ fun ModuleContentScreen(
     moduleId: String,
     sectionId: String,
     courseId: String,
-    viewModel: CourseListViewModel
+    viewModel: CourseListViewModel,
+    modulesViewModel: ModulesViewModel
 ) {
     val courseList by viewModel.courseListState.collectAsState()
     val course = courseList.firstOrNull { it.id == courseId }
@@ -68,7 +69,7 @@ fun ModuleContentScreen(
         },
         content = {
             if (course != null && section != null && module != null) {
-                viewModel.updateModuleCompletedStatusById(courseId, sectionId, moduleId, true)
+                modulesViewModel.updateModuleCompletedStatusById(courseId, sectionId, moduleId, true)
                 ModuleContent(moduleIndex!!, module, it)
             }
         }
@@ -108,6 +109,7 @@ fun MarkdownText(
     AndroidView(
         factory = { ctx ->
             TextView(ctx).apply {
+                textSize = 16f
                 markwon.setMarkdown(this, text)
             }
         },

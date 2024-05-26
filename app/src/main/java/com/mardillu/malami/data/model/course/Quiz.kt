@@ -10,3 +10,12 @@ data class Quiz(
     val options: List<String>,
     val question: String
 )
+
+@Serializable
+data class QuizAttempt(
+    val id: String = UUID.randomUUID().toString(),
+    val quizId: String,
+    val obtainablePoints: Int,
+    val obtainedPoints: Int,
+    val attemptedAt: Long,
+)

@@ -48,13 +48,6 @@ class CourseListViewModel @Inject constructor(
         super.onCleared()
         courseRepository.stopListeningForUserCourses()
     }
-
-    fun updateModuleCompletedStatusById(courseId: String, sectionId: String, moduleId: String, completed: Boolean) {
-        viewModelScope.launch {
-            delay(2 * 60 * 1000)
-            courseRepository.updateModuleCompletedStatusById(courseId, sectionId, moduleId, completed)
-        }
-    }
 }
 
 
