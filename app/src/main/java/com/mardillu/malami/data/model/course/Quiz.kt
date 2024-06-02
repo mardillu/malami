@@ -14,8 +14,16 @@ data class Quiz(
 @Serializable
 data class QuizAttempt(
     val id: String = UUID.randomUUID().toString(),
-    val quizId: String,
-    val obtainablePoints: Int,
-    val obtainedPoints: Int,
-    val attemptedAt: Long,
+    val courseId: String,
+    val sectionId: String,
+    val obtainablePoints: Long,
+    val obtainedPoints: Double,
+    val passed: Boolean = false,
+    val fraction: Double = 0.0,
+    val attemptedAt: Long = System.currentTimeMillis(),
+)
+
+@Serializable
+data class QuizAttempts(
+    val quizAttempts: List<QuizAttempt>
 )

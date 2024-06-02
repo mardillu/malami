@@ -16,6 +16,7 @@ class PreferencesManager(context: Context) {
         private const val KEY_IS_LOGGED_IN = "is.logged.in"
         private const val KEY_IS_LEARNING_STYLE_SET = "is.learning.style.set"
         private const val KEY_IS_FIRST_TIME_LOGIN = "is.first.time.login"
+        private const val   COURSE_LIST_VIEW_STYLE = "course_list_view_style"
     }
 
     var isLoggedIn: Boolean
@@ -29,6 +30,10 @@ class PreferencesManager(context: Context) {
     var isFirstTimeLogin: Boolean
         get() = sharedPreferences.getBoolean(KEY_IS_FIRST_TIME_LOGIN, true)
         set(value) = sharedPreferences.edit { putBoolean(KEY_IS_FIRST_TIME_LOGIN, value) }
+
+    var courseListViewStyle: String
+        get() = sharedPreferences.getString(COURSE_LIST_VIEW_STYLE, "grid") ?: "grid"
+        set(value) = sharedPreferences.edit { putString(COURSE_LIST_VIEW_STYLE, value) }
 
     fun clear() {
         sharedPreferences.edit { clear() }

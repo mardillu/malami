@@ -10,7 +10,7 @@ import com.mardillu.malami.data.model.UserPreferences
 import com.mardillu.malami.data.model.course.Course
 import com.mardillu.malami.data.repository.CoursesRepository
 import com.mardillu.malami.data.repository.PreferencesRepository
-import com.mardillu.malami.ui.courses.list.CourseListState
+import com.mardillu.malami.ui.courses.quiz.UIState
 import com.mardillu.malami.utils.add
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import java.util.UUID
 import javax.inject.Inject
 
 /**
@@ -35,6 +34,9 @@ class CreateCourseViewModel @Inject constructor(
     val createCourseState: StateFlow<CreateCourseState> get() = _createCourseState
 
     private var userPrompt by mutableStateOf("")
+
+    private val _saveQuizUiState = MutableStateFlow<UIState>(UIState.Idle)
+    val saveQuizUiState: StateFlow<UIState> get() = _saveQuizUiState
 
     fun onCreateCourseClicked(subject: String, learningGoals: String, priorKnowledge: String, apiKey: String) {
         if (subject.isBlank() || learningGoals.isBlank() || priorKnowledge.isBlank()) {

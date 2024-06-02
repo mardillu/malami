@@ -1,10 +1,8 @@
 package com.mardillu.malami.ui.courses.course_modules
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,25 +12,20 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -67,7 +60,6 @@ import com.mardillu.malami.ui.courses.list.CourseListViewModel
 import com.mardillu.malami.ui.navigation.AppNavigation
 import com.mardillu.malami.ui.theme.Purple40
 import com.mardillu.malami.ui.theme.Purple80
-import com.mardillu.malami.ui.theme.PurpleGrey40
 
 /**
  * Created on 20/05/2024 at 12:33 pm
@@ -79,7 +71,8 @@ import com.mardillu.malami.ui.theme.PurpleGrey40
 fun ModuleListScreen(
     navigation: AppNavigation,
     courseId: String,
-    viewModel: CourseListViewModel
+    viewModel: CourseListViewModel,
+    modulesViewModel: ModulesViewModel
 ) {
     val courseList by viewModel.courseListState.collectAsState()
     val course = courseList.firstOrNull { it.id == courseId }
@@ -114,11 +107,13 @@ fun ModuleListScreen(
                         ExpandableListItem(
                             section.title,
                             section.modules,
-                            course.title,
+                            if (sectionIndex > 0) course.sections[sectionIndex-1].id else "", //prev section id
                             courseId,
                             section.id,
                             sectionIndex,
-                            navigation
+                            navigation,
+                            viewModel,
+                            modulesViewModel
                         )
                     }
                 }
@@ -131,13 +126,17 @@ fun ModuleListScreen(
 fun ExpandableListItem(
     title: String,
     modules: List<Module>,
-    courseTitle: String,
+    prevSectionId: String,
     courseId: String,
     sectionId: String,
     sectionIndex: Int,
-    navigation: AppNavigation
+    navigation: AppNavigation,
+    viewModel: CourseListViewModel,
+    modulesViewModel: ModulesViewModel
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val quizAttemptsUiState by modulesViewModel.quizAttemptsUiState.collectAsState()
+
     Card(
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
@@ -145,8 +144,7 @@ fun ExpandableListItem(
         elevation = CardDefaults.cardElevation(2.dp),
         //border = BorderStroke(0.5.dp, color = Purple40)
     ) {
-        Column(
-        ) {
+        Column {
             Column(
                 modifier = Modifier
                     .animateContentSize()
@@ -198,11 +196,7 @@ fun ExpandableListItem(
 
                 if (expanded) {
                     modules.forEachIndexed {i, module ->
-                        val moduleActive = if (module.completed || (sectionIndex ==0 && i == 0))
-                            true
-                        else {
-                            i != 0 && modules[i-1].completed
-                        }
+                        val moduleActive = viewModel.isModuleActive(sectionIndex, i, courseId, quizAttemptsUiState, prevSectionId)
                         ModuleListItem(module, moduleActive, onClick = {
                             if (moduleActive) {
                                 navigation.goToModuleContent(courseId, module.id, sectionId)
@@ -220,9 +214,10 @@ fun ExpandableListItem(
                             title = "Section Quiz",
                             shortDescription = "Take the quiz to complete this section and move on to the next",
                             id = "",
-                            content = ""
-                        ), modules[modules.size-1].completed, onClick = {
-                            //navigation.gotoQuiz(courseTitle, "3")
+                            content = "",
+                            completed = modulesViewModel.isQuizTaken(sectionId)
+                        ), (modulesViewModel.isQuizTaken(sectionId) || modules[modules.size-1].completed), onClick = {
+                            navigation.gotoQuiz(courseId, sectionId)
                         }
                     )
                 }
@@ -258,7 +253,7 @@ fun ModuleListItem(module: Module, isModuleActive: Boolean, onClick: () -> Unit)
                 fontWeight = if (isModuleActive) FontWeight.Bold else FontWeight.Normal,
             )
             Text(
-                text = "5 Mins",
+                text = module.timeToRead,
                 style = MaterialTheme.typography.bodyMedium,
                 fontSize = 14.sp
             )

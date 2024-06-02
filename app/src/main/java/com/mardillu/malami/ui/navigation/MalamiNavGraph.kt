@@ -8,6 +8,8 @@ import com.mardillu.malami.ui.courses.course_modules.ModuleContentScreen
 import com.mardillu.malami.ui.courses.course_modules.ModuleListScreen
 import com.mardillu.malami.ui.courses.create.CreateCourseScreen
 import com.mardillu.malami.ui.courses.list.CourseListScreen
+import com.mardillu.malami.ui.courses.quiz.QuizResultScreen
+import com.mardillu.malami.ui.courses.quiz.TakeQuizScreen
 import com.mardillu.malami.ui.onboarding.OnboardingScreen
 
 /**
@@ -34,7 +36,7 @@ fun NavGraphBuilder.appNavGraph(navigation: AppNavigation) {
     composable("${NavRoutes.Modules.route}/{courseId}") { backStackEntry ->
         val courseId = backStackEntry.arguments?.getString("courseId")
         courseId?.let {
-            ModuleListScreen(navigation, courseId, hiltViewModel())
+            ModuleListScreen(navigation, courseId, hiltViewModel(), hiltViewModel())
         }
     }
     composable("${NavRoutes.ModuleContent.route}/{moduleId}/{sectionId}/{courseId}") { backStackEntry ->
@@ -55,6 +57,31 @@ fun NavGraphBuilder.appNavGraph(navigation: AppNavigation) {
         CreateCourseScreen(
             navigation,
             hiltViewModel()
+        )
+    }
+
+    composable("${NavRoutes.TakeQuiz.route}/{sectionId}/{courseId}") { backStackEntry ->
+        val sectionId = backStackEntry.arguments?.getString("sectionId")
+        val courseId = backStackEntry.arguments?.getString("courseId")
+        TakeQuizScreen(
+            navigation = navigation,
+            viewModel = hiltViewModel(),
+            quizViewModel = hiltViewModel(),
+            courseId = courseId,
+            sectionId = sectionId
+        )
+    }
+
+    composable("${NavRoutes.QuizResult.route}/{passed}/{obtainableScore}/{obtainedScore}") { backStackEntry ->
+        val passed = backStackEntry.arguments?.getString("passed")
+        val obtainableScore = backStackEntry.arguments?.getString("obtainableScore")
+        val obtainedScore = backStackEntry.arguments?.getString("obtainedScore")
+        QuizResultScreen(
+            navigation = navigation,
+            passed = passed.toBoolean(),
+            obtainableScore = obtainableScore,
+            obtainedScore = obtainedScore,
+            viewModel = hiltViewModel()
         )
     }
 }

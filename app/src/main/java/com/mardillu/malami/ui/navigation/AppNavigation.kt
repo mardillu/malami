@@ -56,6 +56,18 @@ class AppNavigation(
         }
     }
 
+    fun gotoQuiz(courseId: String, sectionId: String){
+        navController.navigate("${NavRoutes.TakeQuiz.route}/$sectionId/$courseId") {
+            //popUpTo(0) { inclusive = true }
+        }
+    }
+
+    fun goToQuizResult(passed: Boolean, obtainableScore: Long, obtainedScore: Double){
+        navController.navigate("${NavRoutes.QuizResult.route}/$passed/$obtainableScore/$obtainedScore") {
+            //popUpTo(0) { inclusive = true }
+        }
+    }
+
 
 //    fun gotoForgotPassword() {
 //        navController.navigate(NavRoutes.ForgotPassword.route) {
