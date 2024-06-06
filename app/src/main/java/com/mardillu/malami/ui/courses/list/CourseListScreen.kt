@@ -77,12 +77,6 @@ fun CourseListScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Courses") },
-                navigationIcon = {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_launcher_foreground),
-                        contentDescription = null
-                    )
-                },
                 actions = {
                     IconButton(onClick = { /*TODO*/ }) {
                         Icon(Icons.Filled.Search, contentDescription = "Search")
@@ -436,19 +430,6 @@ fun OptionsDialog(
         }
     }
 }
-
-
-data class TravelItem(
-    val image: Painter,
-    val title: String,
-    val subtitle: String
-)
-
-data class CurrentCourse(
-    val image: Painter,
-    val title: String,
-    val progress: Float
-)
 
 enum class CourseListViewType {
     Grid,

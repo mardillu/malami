@@ -1,5 +1,16 @@
 <resources>
-    <string name="app_name">Malami</string>
+    <string name="app_name">Mala.Mi</string>
     <string name="hide">Hide</string>
     <string name="show">Show</string>
 </resources>
+
+<!--
+certificates
+payment integration
+Signup/signin with google
+courses to audio playlist
+AI Explainability
+Learning plan and reminders
+settings -> update learning styles, notification prefs ...
+X course images
+-->

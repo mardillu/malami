@@ -37,13 +37,13 @@ class CoursesRepository @Inject constructor(private val firestore: FirebaseFires
 
     suspend fun createCourse(prompt: String, geminiApiKey: String): Result<GenerateContentResponse> {
         val model = GenerativeModel(
-            "gemini-1.5-flash-latest", //gemini-1.5-pro-001
+            "gemini-1.5-pro-latest", //gemini-1.5-pro-001
             geminiApiKey,
             generationConfig = generationConfig {
                 temperature = 1f
                 topK = 64
                 topP = 0.95f
-                maxOutputTokens = 100_000
+                maxOutputTokens = 200_000
                 responseMimeType = "application/json"
             },
             safetySettings = listOf(
@@ -64,8 +64,6 @@ class CoursesRepository @Inject constructor(private val firestore: FirebaseFires
 
         val chat = model.startChat()
 
-        // Note that sendMessage() is a suspend function and should be called from
-        // a coroutine scope or another suspend function
         val response = chat.sendMessage(prompt)
         return Result.success(response)
         // Get the first text part of the first candidate
