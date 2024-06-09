@@ -68,6 +68,12 @@ class AppNavigation(
         }
     }
 
+    fun gotoAudioPlayer(audioIndex: Int = 0){
+        navController.navigate("${NavRoutes.AudioPlayer.route}/$audioIndex") {
+            //popUpTo(0) { inclusive = true }
+        }
+    }
+
 
 //    fun gotoForgotPassword() {
 //        navController.navigate(NavRoutes.ForgotPassword.route) {

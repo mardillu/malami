@@ -19,6 +19,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.mardillu.malami.data.PreferencesManager
 import com.mardillu.malami.ui.navigation.MalamiNavHost
+import com.mardillu.malami.ui.service.AudioPlayerService
 import com.mardillu.malami.ui.theme.MalamiTheme
 import com.mardillu.malami.work.DailyReadingReminderWorker
 import dagger.hilt.android.AndroidEntryPoint
@@ -31,13 +32,15 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var prefManager: PreferencesManager
+    @Inject
+    lateinit var audioPlayerService: AudioPlayerService
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             MalamiTheme {
                 Surface(color = MaterialTheme.colorScheme.background) {
-                    MalamiNavHost(isLoggedIn = prefManager.isLoggedIn,)
+                    MalamiNavHost(isLoggedIn = prefManager.isLoggedIn, audioPlayerService = audioPlayerService)
 
                     LaunchedEffect(Unit) {
                         checkAndRequestNotificationPermission()

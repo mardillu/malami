@@ -14,5 +14,6 @@ sealed class NavRoutes(val route: String) {
     data object CreateCourse : NavRoutes("/create-course")
     data object TakeQuiz : NavRoutes("/take-quiz")
     data object QuizResult : NavRoutes("/quiz-result")
+    data object AudioPlayer : NavRoutes("/audio-player")
 
 }

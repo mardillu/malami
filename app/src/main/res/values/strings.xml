@@ -2,6 +2,13 @@
     <string name="app_name">Mala.Mi</string>
     <string name="hide">Hide</string>
     <string name="show">Show</string>
+    <string name="playing_audio">Playing audio</string>
+    <string name="audio_is_playing_in_the_background">Audio is playing in the background</string>
+    <string name="audio_artwork">Audio Artwork</string>
+    <string name="previous">Previous</string>
+    <string name="play">Play</string>
+    <string name="next">Next</string>
+    <string name="toggle_progress_visibility">Toggle progress visibility</string>
 </resources>
 
 <!--

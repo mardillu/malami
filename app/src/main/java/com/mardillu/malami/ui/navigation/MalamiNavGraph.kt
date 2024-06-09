@@ -8,15 +8,17 @@ import com.mardillu.malami.ui.courses.course_modules.ModuleContentScreen
 import com.mardillu.malami.ui.courses.course_modules.ModuleListScreen
 import com.mardillu.malami.ui.courses.create.CreateCourseScreen
 import com.mardillu.malami.ui.courses.list.CourseListScreen
+import com.mardillu.malami.ui.courses.player.AudioPlayerScreen
 import com.mardillu.malami.ui.courses.quiz.QuizResultScreen
 import com.mardillu.malami.ui.courses.quiz.TakeQuizScreen
 import com.mardillu.malami.ui.onboarding.OnboardingScreen
+import com.mardillu.malami.ui.service.AudioPlayerService
 
 /**
  * Created on 19/05/2024 at 7:33 pm
  * @author mardillu
  */
-fun NavGraphBuilder.appNavGraph(navigation: AppNavigation) {
+fun NavGraphBuilder.appNavGraph(navigation: AppNavigation, audioPlayerService: AudioPlayerService) {
     composable(NavRoutes.Login.route) {
         LoginSignupScreen(navigation, hiltViewModel())
     }
@@ -82,6 +84,15 @@ fun NavGraphBuilder.appNavGraph(navigation: AppNavigation) {
             obtainableScore = obtainableScore,
             obtainedScore = obtainedScore,
             viewModel = hiltViewModel()
+        )
+    }
+
+    composable("${NavRoutes.AudioPlayer.route}/{audioIndex}") { entry ->
+        val audioIndex = entry?.arguments?.getString("audioIndex")
+        AudioPlayerScreen(
+            audioIndex,
+            audioPlayerService,
+            hiltViewModel()
         )
     }
 }

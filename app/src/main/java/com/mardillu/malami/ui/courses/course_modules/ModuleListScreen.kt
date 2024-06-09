@@ -54,6 +54,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.navOptions
 import com.mardillu.malami.R
 import com.mardillu.malami.data.model.course.Module
 import com.mardillu.malami.ui.courses.list.CourseListViewModel
@@ -201,6 +202,8 @@ fun ExpandableListItem(
                             if (moduleActive) {
                                 navigation.goToModuleContent(courseId, module.id, sectionId)
                             }
+                        },{
+                            navigation.gotoAudioPlayer(i)
                         })
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 0.dp, horizontal = 16.dp),
@@ -227,7 +230,7 @@ fun ExpandableListItem(
 }
 
 @Composable
-fun ModuleListItem(module: Module, isModuleActive: Boolean, onClick: () -> Unit) {
+fun ModuleListItem(module: Module, isModuleActive: Boolean, onClick: () -> Unit, onPlay: () -> Unit = {}) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -259,7 +262,7 @@ fun ModuleListItem(module: Module, isModuleActive: Boolean, onClick: () -> Unit)
             )
         }
         Spacer(modifier = Modifier.width(16.dp))
-        IconButton(onClick = { /* Handle listen action */ }) {
+        IconButton(onClick = { onPlay() }) {
             Icon(Icons.Filled.PlayArrow, contentDescription = "Listen", tint = Color.Gray)
         }
         IconButton(onClick = { /* Handle module completion */ }) {
