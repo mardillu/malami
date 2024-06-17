@@ -3,7 +3,7 @@ package com.mardillu.malami.ui.navigation
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
-import com.mardillu.malami.ui.service.AudioPlayerService
+import com.mardillu.player_service.service.AudioPlayerService
 
 /**
  * Created on 20/05/2024 at 10:13 am
@@ -13,7 +13,7 @@ import com.mardillu.malami.ui.service.AudioPlayerService
 @Composable
 fun MalamiNavHost(
     isLoggedIn: Boolean,
-    audioPlayerService: AudioPlayerService
+    startService: () -> Unit,
 ) {
     val appNavigation = AppNavigation(
         navController = rememberNavController(),
@@ -25,7 +25,7 @@ fun MalamiNavHost(
         navController = appNavigation.navController,
         startDestination = startDestination
     ) {
-       appNavGraph(appNavigation, audioPlayerService)
+       appNavGraph(appNavigation, startService)
     }
 
 }

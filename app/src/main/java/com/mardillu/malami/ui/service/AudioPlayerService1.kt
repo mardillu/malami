@@ -4,22 +4,23 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.Service
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.graphics.drawable.Icon
+import android.os.Binder
 import android.os.Build
 import android.os.Handler
+import android.os.IBinder
 import android.os.Looper
 import android.view.View
 import android.widget.RemoteViews
 import androidx.annotation.OptIn
 import androidx.core.app.NotificationCompat
-import androidx.core.util.TimeUtils.formatDuration
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.session.MediaSession
-import androidx.media3.session.MediaSessionService
 import com.mardillu.malami.R
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,11 +34,11 @@ import javax.inject.Inject
  * @author mardillu
  */
 @AndroidEntryPoint
-class AudioPlayerService: MediaSessionService() {
+class AudioPlayerService1: Service() {
     @Inject
     lateinit var player: ExoPlayer
 
-    private lateinit var mediaSession: MediaSession
+    //private lateinit var mediaSession: MediaSession
     private val handler = Handler(Looper.getMainLooper())
     val NOTIFICATION_ID = 100
     val CHANNEL_ID = "audio_playback_channel"
@@ -50,11 +51,14 @@ class AudioPlayerService: MediaSessionService() {
     private val _progress = MutableStateFlow(AudioPlaybackProgress())
     val progress: StateFlow<AudioPlaybackProgress> get() = _progress
 
+    private val binder = AudioPlayerBinder()
+
+    @OptIn(UnstableApi::class)
     override fun onCreate() {
         super.onCreate()
-        mediaSession = MediaSession.Builder(this, player).apply {
-            setSessionActivity(createContentIntent())
-        }.build()
+//        mediaSession = MediaSession.Builder(this, player).apply {
+//            setSessionActivity(createContentIntent())
+//        }.build()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -64,6 +68,16 @@ class AudioPlayerService: MediaSessionService() {
             )
             getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
+
+        player.addListener(object : Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                if (playbackState == ExoPlayer.STATE_READY) {
+                    _isPlaying.update { true }
+                } else {
+                    _isPlaying.update { false }
+                }
+            }
+        })
 
         startForeground(NOTIFICATION_ID, createNotification())
         updateNotificationProgress()
@@ -150,6 +164,7 @@ class AudioPlayerService: MediaSessionService() {
 //                .setShowActionsInCompactView(0, 1, 2))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
+            .setSilent(true)
 //            .setTicker("ticker")
 //            .setDefaults(Notification.DEFAULT_ALL)
 
@@ -203,14 +218,18 @@ class AudioPlayerService: MediaSessionService() {
         _isPlaying.update { true }
     }
 
-    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession {
-        return mediaSession
-    }
+//    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession {
+//        return mediaSession
+//    }
 
     override fun onDestroy() {
-        mediaSession.release()
+       // mediaSession.release()
         player.release()
         super.onDestroy()
+    }
+
+    override fun onBind(intent: Intent?): IBinder {
+        return binder
     }
 
     /**
@@ -220,7 +239,7 @@ class AudioPlayerService: MediaSessionService() {
      * @param rootIntent The original root Intent that was used to launch the task that is being removed.
      */
     override fun onTaskRemoved(rootIntent: Intent?) {
-        val player = mediaSession.player
+        //val player = mediaSession.player
         if (!player.playWhenReady || player.mediaItemCount == 0) {
             stopSelf()
         }
@@ -259,10 +278,11 @@ class AudioPlayerService: MediaSessionService() {
         const val EXTRA_SEEK_TO = "extra_seek_to"
         const val ACTION_SEEK_TO = "action_seek_to"
     }
-
-    @UnstableApi
-    private inner class MediaSessionCallback : MediaSessionService.Listener {
-
+//    Intent(this, AudioPlayerService::class.java).also { intent ->
+//        startService(intent)
+//    }
+    inner class AudioPlayerBinder : Binder() {
+        fun getService(): AudioPlayerService1 = this@AudioPlayerService1
     }
 }
 

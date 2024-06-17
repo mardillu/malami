@@ -12,13 +12,16 @@ import com.mardillu.malami.ui.courses.player.AudioPlayerScreen
 import com.mardillu.malami.ui.courses.quiz.QuizResultScreen
 import com.mardillu.malami.ui.courses.quiz.TakeQuizScreen
 import com.mardillu.malami.ui.onboarding.OnboardingScreen
-import com.mardillu.malami.ui.service.AudioPlayerService
+import com.mardillu.player_service.service.AudioPlayerService
 
 /**
  * Created on 19/05/2024 at 7:33 pm
  * @author mardillu
  */
-fun NavGraphBuilder.appNavGraph(navigation: AppNavigation, audioPlayerService: AudioPlayerService) {
+fun NavGraphBuilder.appNavGraph(
+    navigation: AppNavigation,
+    startService: () -> Unit
+) {
     composable(NavRoutes.Login.route) {
         LoginSignupScreen(navigation, hiltViewModel())
     }
@@ -87,11 +90,15 @@ fun NavGraphBuilder.appNavGraph(navigation: AppNavigation, audioPlayerService: A
         )
     }
 
-    composable("${NavRoutes.AudioPlayer.route}/{audioIndex}") { entry ->
-        val audioIndex = entry?.arguments?.getString("audioIndex")
+    composable("${NavRoutes.AudioPlayer.route}/{courseId}/{sectionId}/{moduleId}") { entry ->
+        val courseId = entry.arguments?.getString("courseId")
+        val sectionId = entry.arguments?.getString("sectionId")
+        val moduleId = entry.arguments?.getString("moduleId")
         AudioPlayerScreen(
-            audioIndex,
-            audioPlayerService,
+            courseId,
+            sectionId,
+            moduleId,
+            startService,
             hiltViewModel()
         )
     }

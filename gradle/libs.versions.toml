@@ -1,7 +1,9 @@
 [versions]
 agp = "8.4.1"
+converterGson = "2.9.0"
 core = "4.6.2"
 generativeai = "0.7.0"
+glide = "4.15.1"
 hiltWork = "1.2.0"
 kotlin = "1.9.0"
 coreKtx = "1.13.1"
@@ -9,6 +11,7 @@ junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
 kotlinxSerializationJson = "1.6.3"
+legacySupportV4 = "1.0.0"
 lifecycleRuntimeKtx = "2.8.1"
 lifecycleViewModelCompose = "2.8.0"
 activityCompose = "1.9.0"
@@ -31,15 +34,21 @@ coroutinesCore = "1.8.0"
 workRuntimeKtx = "2.9.0"
 hiltCommon = "1.2.0"
 media3Session = "1.3.1"
+media3Ui = "1.3.1"
+appcompat = "1.7.0"
+material = "1.12.0"
 
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltWork" }
+androidx-legacy-support-v4 = { module = "androidx.legacy:legacy-support-v4", version.ref = "legacySupportV4" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 androidx-media = { module = "androidx.media:media", version.ref = "media" }
 androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3Exoplayer" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
+converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
+glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 markdown-core = { group = "io.noties.markwon", name = "core", version.ref = "core" }
 markdown-ext-autolink = { module = "io.noties.markwon:ext-autolink", version.ref = "core" }
 markdown-ext-strikethrough = { module = "io.noties.markwon:ext-strikethrough", version.ref = "core" }
@@ -82,6 +91,9 @@ org-jetbrains-kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name 
 markdown-syntax-highlight = { module = "io.noties.markwon:syntax-highlight", version.ref = "core" }
 androidx-hilt-common = { group = "androidx.hilt", name = "hilt-common", version.ref = "hiltCommon" }
 androidx-media3-session = { group = "androidx.media3", name = "media3-session", version.ref = "media3Session" }
+androidx-media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "media3Ui" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 
 
 

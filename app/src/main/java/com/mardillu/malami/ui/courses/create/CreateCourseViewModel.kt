@@ -146,7 +146,7 @@ class CreateCourseViewModel @Inject constructor(
 
     private fun getCourses(course: Course, response: GenerateContentResponse) {
         viewModelScope.launch {
-            val userCourses = courseRepository.getCourses()
+            val userCourses = courseRepository.getCourses(false)
             userCourses.getOrNull()?.let { courses ->
                 val newCourses = courses.add(course)
                 saveCourse(newCourses, response)

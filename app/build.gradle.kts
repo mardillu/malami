@@ -48,26 +48,29 @@ android {
                 localPropertiesFile.inputStream().use { load(it) }
             }
         }
-        val apiKey: String = localProperties.getProperty("GEMINI_API_KEY") ?: ""
+        val geminiApiKey: String = localProperties.getProperty("GEMINI_API_KEY") ?: ""
+        val cloudSpeechApiKey: String = localProperties.getProperty("CLOUD_SPEECH_API_KEY") ?: ""
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("String", "GEMINI_API_KEY", apiKey)
+            buildConfigField("String", "GEMINI_API_KEY", geminiApiKey)
+            buildConfigField("String", "CLOUD_SPEECH_API_KEY", cloudSpeechApiKey)
         }
 
         debug {
-            buildConfigField("String", "GEMINI_API_KEY", apiKey)
+            buildConfigField("String", "GEMINI_API_KEY", geminiApiKey)
+            buildConfigField("String", "CLOUD_SPEECH_API_KEY", cloudSpeechApiKey)
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
@@ -83,7 +86,7 @@ android {
 }
 
 dependencies {
-
+    implementation(project(":player-service"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -110,10 +113,12 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.common)
     implementation(libs.androidx.hilt.work)
-    implementation(libs.androidx.media)
+    //implementation(libs.androidx.media)
+    implementation(libs.converter.gson)
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.material.icons.extended)
+    implementation(libs.androidx.media3.ui)
     kapt(libs.kapt)
     kapt(libs.hilt.kapt)
     testImplementation(libs.junit)

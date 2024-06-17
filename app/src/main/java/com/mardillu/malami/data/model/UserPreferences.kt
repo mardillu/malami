@@ -20,3 +20,4 @@ data class UserCoursePreferences(
     val learningGoals: String,
     val priorKnowledge: String,
 )
+

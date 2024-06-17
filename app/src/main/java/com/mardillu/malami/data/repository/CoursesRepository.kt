@@ -12,6 +12,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Source
 import com.mardillu.malami.data.model.course.Course
 import com.mardillu.malami.data.model.course.LearningSchedule
 import com.mardillu.malami.data.model.course.Module
@@ -207,14 +208,22 @@ class CoursesRepository @Inject constructor(private val firestore: FirebaseFires
         }
     }
 
-    suspend fun getCourses(): Result<List<Course>> {
+    suspend fun getCourses(fromCache: Boolean): Result<List<Course>> {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
 
         return try {
-            val courses = firestore.collection("courses")
-                .document(userId)
-                .get()
-                .await()
+            val courses = if (fromCache) {
+                firestore.collection("courses")
+                    .document(userId)
+                    .get(Source.CACHE)
+                    .await()
+            } else {
+                firestore.collection("courses")
+                    .document(userId)
+                    .get()
+                    .await()
+            }
+
 
             if (courses != null && courses.exists() && courses["courses"] != null) {
                 val coursesList = (courses["courses"] as List<Map<String, Any>>).map { coursesMap ->

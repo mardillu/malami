@@ -14,7 +14,7 @@ class MediaActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         if (context != null && intent != null) {
             val action = intent.action ?: return
-            val mediaServiceIntent = Intent(context, AudioPlayerService::class.java).apply {
+            val mediaServiceIntent = Intent(context, AudioPlayerService1::class.java).apply {
                 this.action = action
             }
 

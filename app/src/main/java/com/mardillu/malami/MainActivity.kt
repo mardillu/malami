@@ -1,6 +1,7 @@
 package com.mardillu.malami
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -19,9 +20,9 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.mardillu.malami.data.PreferencesManager
 import com.mardillu.malami.ui.navigation.MalamiNavHost
-import com.mardillu.malami.ui.service.AudioPlayerService
 import com.mardillu.malami.ui.theme.MalamiTheme
 import com.mardillu.malami.work.DailyReadingReminderWorker
+import com.mardillu.player_service.service.AudioPlayerService
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
@@ -32,15 +33,15 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var prefManager: PreferencesManager
-    @Inject
-    lateinit var audioPlayerService: AudioPlayerService
+
+    private var isServiceRunning = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             MalamiTheme {
                 Surface(color = MaterialTheme.colorScheme.background) {
-                    MalamiNavHost(isLoggedIn = prefManager.isLoggedIn, audioPlayerService = audioPlayerService)
+                    MalamiNavHost(isLoggedIn = prefManager.isLoggedIn, ::startService)
 
                     LaunchedEffect(Unit) {
                         checkAndRequestNotificationPermission()
@@ -105,6 +106,24 @@ class MainActivity : ComponentActivity() {
             ExistingPeriodicWorkPolicy.UPDATE,
             dailyWorkRequest
         )
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopService(Intent(this, AudioPlayerService::class.java))
+        isServiceRunning = false
+    }
+
+    private fun startService() {
+        if (!isServiceRunning) {
+            val intent = Intent(this, AudioPlayerService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
+            isServiceRunning = true
+        }
     }
 }
 

@@ -1,12 +1,7 @@
 package com.mardillu.malami.ui.courses.player
 
-import android.content.Context
-import android.content.Intent
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,13 +13,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PlaylistPlay
@@ -34,16 +29,12 @@ import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -54,11 +45,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.media3.common.MediaItem
-import androidx.media3.exoplayer.ExoPlayer
-import com.mardillu.malami.ui.service.AudioPlaybackProgress
-import com.mardillu.malami.ui.service.AudioPlayerService
 
 /**
  * Created on 08/06/2024 at 10:39 pm
@@ -66,156 +52,36 @@ import com.mardillu.malami.ui.service.AudioPlayerService
  */
 @Composable
 fun AudioPlayerScreen(
-    audioIndex: String?,
-    audioPlayerService: AudioPlayerService,
+    courseId: String?,
+    sectionId: String?,
+    moduleId: String?,
+    startService: () -> Unit,
     viewModel: AudioPlayerViewModel
 ) {
-    val isPlaying by audioPlayerService.isPlaying.collectAsState(initial = false)
-    val progress by audioPlayerService.progress.collectAsState(initial = AudioPlaybackProgress())
-    var isExpanded by rememberSaveable { mutableStateOf(true) }
+    val context = LocalContext.current
+    val cacheDir = context.cacheDir
 
-//    val exoPlayer = remember {
-//        ExoPlayer.Builder(context).build().apply {
-//            val mediaItem = MediaItem.fromUri("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3")
-//            addMediaItem(mediaItem)
-//            prepare()
-//            playWhenReady = true
-//        }
-//    }
-//
-//    DisposableEffect(exoPlayer) {
-//        onDispose {
-//            exoPlayer.release()
-//        }
-//    }
-
-    // Example list of audios
-    val audioList = listOf(
-        "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-        "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-        "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-        "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
-        "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3",
-    )
-
-    LaunchedEffect(Unit) {
-        viewModel.setAudioList(audioList, audioIndex?.toIntOrNull() ?: 0)
+    LaunchedEffect(true) {
+        viewModel.loadCourseAudios(courseId!!, cacheDir)
+        startService()
     }
+    var isExpanded by rememberSaveable { mutableStateOf(true) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (isExpanded) {
-            MusicPlayerScreen(viewModel, audioPlayerService, isPlaying, progress)
+            MusicPlayerScreen(viewModel)
         } else {
-            MiniPlayer(viewModel) { isExpanded = true }
-        }
-    }
-}
-
-@Composable
-fun PlayerScreen(viewModel: AudioPlayerViewModel) {
-    val isPlaying by viewModel.isPlaying.collectAsState()
-    val currentAudioIndex by viewModel.currentAudioIndex.collectAsState()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .background(Color.DarkGray)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text("Song Name", color = Color.White, style = MaterialTheme.typography.headlineMedium)
-        Text("Artist Name", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            IconButton(onClick = { viewModel.playPrevious() }) {
-                Icon(imageVector = Icons.Default.SkipPrevious, contentDescription = "Previous", tint = Color.White)
-            }
-
-            IconButton(onClick = { viewModel.togglePlayPause() }) {
-                Icon(
-                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) "Pause" else "Play",
-                    tint = Color.White
-                )
-            }
-
-            IconButton(onClick = { viewModel.playNext() }) {
-                Icon(imageVector = Icons.Default.SkipNext, contentDescription = "Next", tint = Color.White)
-            }
-        }
-
-
-        Slider(
-            value = 0.5f,
-            onValueChange = {},
-            modifier = Modifier.fillMaxWidth(),
-            colors = SliderDefaults.colors(
-                thumbColor = Color.White,
-                activeTrackColor = Color.White
-            )
-        )
-        // Slider and additional controls
-    }
-}
-
-@Composable
-fun MiniPlayer(viewModel: AudioPlayerViewModel, onExpand: () -> Unit) {
-    val isPlaying by viewModel.isPlaying.collectAsState()
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.Black)
-            .padding(8.dp)
-            .clickable { onExpand() },
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .background(Color.DarkGray, shape = RoundedCornerShape(8.dp))
-        )
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
-            Text("Song Name", color = Color.White)
-            Text("Artist Name", color = Color.Gray, style = MaterialTheme.typography.titleSmall)
-        }
-
-        IconButton(onClick = { viewModel.togglePlayPause() }) {
-            Icon(
-                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                contentDescription = if (isPlaying) "Pause" else "Play",
-                tint = Color.White
-            )
-        }
-
-        IconButton(onClick = { /* Handle next */ }) {
-            Icon(imageVector = Icons.Default.SkipNext, contentDescription = "Next", tint = Color.White)
+           /// MiniPlayer(viewModel) { isExpanded = true }
         }
     }
 }
 
 
 @Composable
-fun MusicPlayerScreen(viewModel: AudioPlayerViewModel, audioPlayerService: AudioPlayerService, isPlaying: Boolean, progress: AudioPlaybackProgress) {
-    //val isPlaying by viewModel.isPlaying.collectAsState()
-
+fun MusicPlayerScreen(viewModel: AudioPlayerViewModel) {
+    val newProgressValue = remember { mutableStateOf(0f) }
+    val useNewProgressValue = remember { mutableStateOf(false) }
+    val mediaItemState = viewModel.mediaItemState.collectAsState()
 
     Column(
         modifier = Modifier
@@ -225,8 +91,8 @@ fun MusicPlayerScreen(viewModel: AudioPlayerViewModel, audioPlayerService: Audio
     ) {
         Spacer(modifier = Modifier.height(20.dp))
         Image(
-            imageVector = Icons.Default.MusicNote,
-            contentDescription = "Album Art",
+            imageVector = Icons.AutoMirrored.Filled.MenuBook,
+            contentDescription = "Audio Art",
             modifier = Modifier
                 .size(300.dp)
                 .align(Alignment.CenterHorizontally)
@@ -234,15 +100,21 @@ fun MusicPlayerScreen(viewModel: AudioPlayerViewModel, audioPlayerService: Audio
         )
         Spacer(modifier = Modifier.height(32.dp))
         Text(
-            text = "Song Name",
+            text = mediaItemState.value.mediaMetadata.title?.toString() ?: "-",
             color = Color.White,
             fontSize = 24.sp,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
         Text(
-            text = "Artist Name",
+            text = mediaItemState.value.mediaMetadata.displayTitle?.toString() ?: "-",
             color = Color.Gray,
             fontSize = 16.sp,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        )
+        Text(
+            text = mediaItemState.value.mediaMetadata.albumTitle?.toString() ?: "-",
+            color = Color.Gray,
+            fontSize = 14.sp,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
         Spacer(modifier = Modifier.height(32.dp))
@@ -251,7 +123,7 @@ fun MusicPlayerScreen(viewModel: AudioPlayerViewModel, audioPlayerService: Audio
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { viewModel.playPrevious() }) {
+            IconButton(onClick = { viewModel.onUIEvent(UIEvent.Backward) }) {
                 Icon(
                     imageVector = Icons.Default.SkipPrevious,
                     contentDescription = "Previous",
@@ -260,19 +132,19 @@ fun MusicPlayerScreen(viewModel: AudioPlayerViewModel, audioPlayerService: Audio
                 )
             }
             IconButton(
-                onClick = { viewModel.togglePlayPause() },
+                onClick = { viewModel.onUIEvent(UIEvent.PlayPause) },
                 modifier = Modifier
                     .background(Color(0xFF7B61FF), RoundedCornerShape(12.dp))
                     .padding(16.dp)
             ) {
                 Icon(
-                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) "Pause" else "Play",
+                    imageVector = if (viewModel.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                    contentDescription = if (viewModel.isPlaying) "Pause" else "Play",
                     tint = Color.White,
                     modifier = Modifier.size(48.dp)
                 )
             }
-            IconButton(onClick = { viewModel.playNext()}) {
+            IconButton(onClick = { viewModel.onUIEvent(UIEvent.Forward) }) {
                 Icon(
                     imageVector = Icons.Default.SkipNext,
                     contentDescription = "Next",
@@ -287,22 +159,34 @@ fun MusicPlayerScreen(viewModel: AudioPlayerViewModel, audioPlayerService: Audio
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = progress.timeElapsed, color = Color.Gray, fontSize = 12.sp)
-            Text(text = progress.timeRemaining, color = Color.Gray, fontSize = 12.sp)
+            Text(text = viewModel.progressString, color = Color.Gray, fontSize = 12.sp)
+            Text(text = viewModel.remainderString, color = Color.Gray, fontSize = 12.sp)
         }
+//        Slider(
+//            value = progress.position.toFloat(),
+//            onValueChange = { viewModel.seekTo(it) },
+//            modifier = Modifier.fillMaxWidth(),
+//            valueRange = 0f..progress.duration.toFloat(),
+//            colors = SliderDefaults.colors(
+//                thumbColor = Color(0xFF7B61FF),
+//                activeTrackColor = Color(0xFF7B61FF),
+//                inactiveTrackColor = Color.Gray
+//            )
+//        )
+
         Slider(
-            value = progress.position.toFloat(),
-            onValueChange = { viewModel.seekTo(it) },
+            value = if (useNewProgressValue.value) newProgressValue.value else viewModel.progress,
+            onValueChange = { newValue ->
+                useNewProgressValue.value = true
+                newProgressValue.value = newValue
+                viewModel.onUIEvent(UIEvent.UpdateProgress(newProgress = newValue))
+            },
+            onValueChangeFinished = {
+                useNewProgressValue.value = false
+            },
             modifier = Modifier.fillMaxWidth(),
-            valueRange = 0f..progress.duration.toFloat(),
-            colors = SliderDefaults.colors(
-                thumbColor = Color(0xFF7B61FF),
-                activeTrackColor = Color(0xFF7B61FF),
-                inactiveTrackColor = Color.Gray
-            )
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        //BottomNavigation()
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }
 
@@ -326,7 +210,7 @@ fun BottomNavigation() {
             Icon(imageVector = Icons.Default.Favorite, contentDescription = "Favorite", tint = Color.Gray)
         }
         IconButton(onClick = { /* TODO: Add playlist action */ }) {
-            Icon(imageVector = Icons.Default.PlaylistPlay, contentDescription = "Playlist", tint = Color.Gray)
+            Icon(imageVector = Icons.AutoMirrored.Filled.PlaylistPlay, contentDescription = "Playlist", tint = Color.Gray)
         }
     }
 }

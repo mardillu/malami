@@ -68,8 +68,8 @@ class AppNavigation(
         }
     }
 
-    fun gotoAudioPlayer(audioIndex: Int = 0){
-        navController.navigate("${NavRoutes.AudioPlayer.route}/$audioIndex") {
+    fun gotoAudioPlayer(courseId: String, sectionId: String, moduleId: String){
+        navController.navigate("${NavRoutes.AudioPlayer.route}/$courseId/$sectionId/$moduleId") {
             //popUpTo(0) { inclusive = true }
         }
     }

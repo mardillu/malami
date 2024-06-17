@@ -31,3 +31,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "malami"
 include(":app")
+include(":player-service")

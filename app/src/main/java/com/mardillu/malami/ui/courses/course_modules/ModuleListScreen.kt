@@ -203,7 +203,7 @@ fun ExpandableListItem(
                                 navigation.goToModuleContent(courseId, module.id, sectionId)
                             }
                         },{
-                            navigation.gotoAudioPlayer(i)
+                            navigation.gotoAudioPlayer(courseId, sectionId, module.id,)
                         })
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 0.dp, horizontal = 16.dp),
