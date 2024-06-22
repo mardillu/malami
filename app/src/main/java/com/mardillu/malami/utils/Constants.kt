@@ -11,3 +11,10 @@ object FlagConstants {
     const val MAX_INCOMPLETE_COURSES = "MAX_INCOMPLETE_COURSES"
     const val TIME_TO_MARK_MODULE_AS_COMPLETE = "TIME_TO_MARK_MODULE_AS_COMPLETE"
 }
+
+object NotificationConstants {
+    const val AUDIO_PLAYBACK_NOTIFICATION_ID = 100
+    const val AUDIO_PLAYBACK_CHANNEL_ID = "audio_playback_channel"
+    const val TTS_NOTIFICATION_ID = 200
+    const val TTS_CHANNEL_ID = "tts_channel"
+}

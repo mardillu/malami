@@ -55,7 +55,6 @@ import com.mardillu.malami.ui.navigation.AppNavigation
  * Created on 19/05/2024 at 6:46 pm
  * @author mardillu
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginSignupScreen(
     navigation: AppNavigation,

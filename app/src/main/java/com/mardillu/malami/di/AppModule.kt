@@ -5,11 +5,11 @@ package com.mardillu.malami.di
  * @author mardillu
  */
 import android.content.Context
+import androidx.work.WorkManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.mardillu.malami.data.PreferencesManager
-import com.mardillu.malami.ui.courses.player.CommandHandler
-import com.mardillu.malami.ui.service.AudioPlayerService1
+import com.mardillu.malami.network.TTSApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -37,20 +37,18 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideCommandHandler(@ApplicationContext context: Context): CommandHandler {
-        return CommandHandler(context)
+    fun provideContext(@ApplicationContext context: Context): Context {
+        return context
     }
 
     @Provides
     @Singleton
-    fun provideAudioPlayerService(): AudioPlayerService1 {
-        return AudioPlayerService1()
+    fun provideTextToSpeechApi(preferencesManager: PreferencesManager): TTSApiService {
+        return TTSApiService(preferencesManager)
     }
-    
+
     @Provides
     @Singleton
-    fun provideContext(@ApplicationContext context: Context): Context {
-        return context
-    }
+    fun provideWorkManager(@ApplicationContext context: Context) = WorkManager.getInstance(context)
 
 }

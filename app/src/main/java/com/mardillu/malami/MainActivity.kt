@@ -1,10 +1,13 @@
 package com.mardillu.malami
 
 import android.Manifest
+import android.app.ActivityManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -21,6 +24,7 @@ import androidx.work.WorkManager
 import com.mardillu.malami.data.PreferencesManager
 import com.mardillu.malami.ui.navigation.MalamiNavHost
 import com.mardillu.malami.ui.theme.MalamiTheme
+import com.mardillu.malami.utils.ShowToast
 import com.mardillu.malami.work.DailyReadingReminderWorker
 import com.mardillu.player_service.service.AudioPlayerService
 import dagger.hilt.android.AndroidEntryPoint
@@ -115,6 +119,14 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startService() {
+        val isAudioPlayerServiceRunning = isServiceRunning(this, AudioPlayerService::class.java)
+        if (isAudioPlayerServiceRunning) {
+            isServiceRunning = true
+            Log.d("MainActivity", "AudioPlayerService is already running")
+            return
+        }
+
+        Log.d("MainActivity", "Starting AudioPlayerService")
         if (!isServiceRunning) {
             val intent = Intent(this, AudioPlayerService::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -124,6 +136,20 @@ class MainActivity : ComponentActivity() {
             }
             isServiceRunning = true
         }
+    }
+
+    private fun isServiceRunning(context: Context, serviceClass: Class<*>): Boolean {
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val services = activityManager.getRunningServices(Integer.MAX_VALUE)
+        for (service in services) {
+            if (serviceClass.name == service.service.className) {
+                Log.d("MainActivity", "AudioPlayerService is running")
+                return true
+            }
+        }
+
+        Log.d("MainActivity", "AudioPlayerService is not running")
+        return false
     }
 }
 

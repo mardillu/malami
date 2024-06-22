@@ -119,6 +119,12 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.media3.ui)
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.logging.interceptor)
+    implementation(libs.play.services.auth)
+
+
     kapt(libs.kapt)
     kapt(libs.hilt.kapt)
     testImplementation(libs.junit)

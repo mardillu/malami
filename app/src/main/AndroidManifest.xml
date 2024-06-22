@@ -8,6 +8,14 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove"/>
+
     <application
         android:name=".MalamiApp"
         android:allowBackup="true"
@@ -31,32 +39,13 @@
         </activity>
 
         <service
-            android:name=".ui.service.AudioPlayerService1"
-            android:foregroundServiceType="mediaPlayback"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="androidx.media3.session.MediaSessionService"/>
-            </intent-filter>
-        </service>
-        <service
             android:name="com.mardillu.player_service.service.AudioPlayerService"
             android:foregroundServiceType="mediaPlayback" />
 
-        <receiver android:name=".ui.service.MediaActionReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="action_play" />
-                <action android:name="action_pause" />
-                <action android:name="action_next" />
-                <action android:name="action_previous" />
-            </intent-filter>
-        </receiver>
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:multiprocess="true"
+            tools:node="remove" />
     </application>
-
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.TTS_SERVICE" />
-        </intent>
-    </queries>
-
 </manifest>

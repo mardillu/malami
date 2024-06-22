@@ -41,7 +41,14 @@ fun NavGraphBuilder.appNavGraph(
     composable("${NavRoutes.Modules.route}/{courseId}") { backStackEntry ->
         val courseId = backStackEntry.arguments?.getString("courseId")
         courseId?.let {
-            ModuleListScreen(navigation, courseId, hiltViewModel(), hiltViewModel())
+            ModuleListScreen(
+                navigation,
+                courseId,
+                startService,
+                hiltViewModel(),
+                hiltViewModel(),
+                hiltViewModel()
+            )
         }
     }
     composable("${NavRoutes.ModuleContent.route}/{moduleId}/{sectionId}/{courseId}") { backStackEntry ->

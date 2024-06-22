@@ -41,8 +41,8 @@ class PreferencesManager(context: Context) {
         get() = sharedPreferences.getString(COURSE_LIST_VIEW_STYLE, "grid") ?: "grid"
         set(value) = sharedPreferences.edit { putString(COURSE_LIST_VIEW_STYLE, value) }
 
-    var savedCourseAudios: List<List<ModuleAudio>>
-        get() = getSharedPrefObject<List<List<ModuleAudio>>>(SAVED_AUDIOS) ?: emptyList()
+    var savedCourseAudios: List<ModuleAudio>
+        get() = getSharedPrefObject<List<ModuleAudio>>(SAVED_AUDIOS) ?: emptyList()
         set(value) = saveToSharedPref(SAVED_AUDIOS, value)
 
     fun clear() {

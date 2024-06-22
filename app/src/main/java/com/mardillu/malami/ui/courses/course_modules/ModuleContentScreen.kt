@@ -80,7 +80,7 @@ fun ModuleContentScreen(
 fun ModuleContent(moduleIndex: Int, module: Module, it: PaddingValues) {
     Column(modifier = Modifier.padding(it).padding(16.dp)) {
         Text(
-            text = "Module $moduleIndex",
+            text = "Module ${moduleIndex + 1}",
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(bottom = 8.dp)
         )

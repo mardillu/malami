@@ -48,7 +48,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -383,7 +382,7 @@ fun CurrentCourseCard(course: Course, progress: Float, navigation: AppNavigation
                 LinearProgressIndicator(
                     progress = { progress },
                     modifier = Modifier.fillMaxWidth(),
-                    color = Color.Green,
+                    color = MaterialTheme.colorScheme.tertiary,
                     trackColor = Color.Gray,
                 )
             }

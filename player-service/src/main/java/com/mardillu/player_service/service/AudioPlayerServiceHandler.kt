@@ -27,6 +27,8 @@ class AudioPlayerServiceHandler @Inject constructor(
         job = Job()
     }
 
+    fun isPlaying() = player.isPlaying
+
     fun addMediaItem(mediaItem: MediaItem) {
         player.setMediaItem(mediaItem)
         player.prepare()
@@ -67,8 +69,13 @@ class AudioPlayerServiceHandler @Inject constructor(
         when (playbackState) {
             ExoPlayer.STATE_BUFFERING -> _audioPlayerState.value =
                 AudioPlayerState.Buffering(player.currentPosition)
-            ExoPlayer.STATE_READY -> _audioPlayerState.value =
-                AudioPlayerState.Ready(player.duration)
+            ExoPlayer.STATE_READY -> {
+                if (player.currentMediaItem != null) {
+                    _nowPlayingModule.value = player.currentMediaItem!!
+                }
+                _audioPlayerState.value =
+                    AudioPlayerState.Ready(player.duration)
+            }
         }
     }
 
@@ -76,9 +83,6 @@ class AudioPlayerServiceHandler @Inject constructor(
     override fun onIsPlayingChanged(isPlaying: Boolean) {
         _audioPlayerState.value = AudioPlayerState.Playing(isPlaying = isPlaying)
         if (isPlaying) {
-            if (player.currentMediaItem != null) {
-                _nowPlayingModule.update { player.currentMediaItem!! }
-            }
             GlobalScope.launch(Dispatchers.Main) {
                 startProgressUpdate()
             }
@@ -90,6 +94,9 @@ class AudioPlayerServiceHandler @Inject constructor(
     private suspend fun startProgressUpdate() = job.run {
         while (true) {
             delay(500)
+            if (player.currentMediaItem != null) {
+                _nowPlayingModule.value = player.currentMediaItem!!
+            }
             _audioPlayerState.value = AudioPlayerState.Progress(player.currentPosition)
         }
     }

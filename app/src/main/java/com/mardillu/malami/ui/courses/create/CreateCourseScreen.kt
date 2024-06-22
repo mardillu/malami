@@ -76,6 +76,10 @@ fun CreateCourseScreen(navigation: AppNavigation,
         AnimatedBottomSheet(onDismiss = { showBottomSheet = false })
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.setTtsApiKey(BuildConfig.CLOUD_SPEECH_API_KEY)
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -160,7 +164,8 @@ fun CreateCourseScreen(navigation: AppNavigation,
                         value = learningGoals,
                         onValueChange = { learningGoals = it },
                         label = { Text("Learning Goals") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
                             .height(150.dp),
                         keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
                         colors = TextFieldDefaults.colors(
@@ -211,7 +216,7 @@ fun CreateCourseScreen(navigation: AppNavigation,
                     showBottomSheet = false
                     Text(
                         text = "Course created successfully!",
-                        color = Color.Green,
+                        color = MaterialTheme.colorScheme.tertiary,
                         fontSize = 16.sp,
                         modifier = Modifier.padding(top = 16.dp)
                     )
@@ -255,7 +260,10 @@ fun AnimatedBottomSheet(onDismiss: () -> Unit) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface, shape = MaterialTheme.shapes.large)
+                    .background(
+                        MaterialTheme.colorScheme.surface,
+                        shape = MaterialTheme.shapes.large
+                    )
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center

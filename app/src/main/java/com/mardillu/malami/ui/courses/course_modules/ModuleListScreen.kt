@@ -1,6 +1,9 @@
 package com.mardillu.malami.ui.courses.course_modules
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -22,8 +26,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Timelapse
+import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,22 +38,25 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -54,13 +64,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.navOptions
 import com.mardillu.malami.R
 import com.mardillu.malami.data.model.course.Module
+import com.mardillu.malami.ui.common.ui.NowPlayingBottomBar
 import com.mardillu.malami.ui.courses.list.CourseListViewModel
+import com.mardillu.malami.ui.courses.player.AudioPlayerScreen
+import com.mardillu.malami.ui.courses.player.AudioPlayerViewModel
+import com.mardillu.malami.ui.courses.player.CustomDragHandle
 import com.mardillu.malami.ui.navigation.AppNavigation
-import com.mardillu.malami.ui.theme.Purple40
-import com.mardillu.malami.ui.theme.Purple80
+import com.mardillu.malami.utils.AppAlertDialog
+import kotlinx.coroutines.launch
 
 /**
  * Created on 20/05/2024 at 12:33 pm
@@ -72,55 +85,124 @@ import com.mardillu.malami.ui.theme.Purple80
 fun ModuleListScreen(
     navigation: AppNavigation,
     courseId: String,
+    startService: () -> Unit,
     viewModel: CourseListViewModel,
-    modulesViewModel: ModulesViewModel
+    modulesViewModel: ModulesViewModel,
+    playerViewModel: AudioPlayerViewModel
 ) {
     val courseList by viewModel.courseListState.collectAsState()
     val course = courseList.firstOrNull { it.id == courseId }
+    var showMessageDialog by rememberSaveable { mutableStateOf(false) }
+    var sectionIdState by rememberSaveable { mutableStateOf("") }
+    var moduleIdState by rememberSaveable { mutableStateOf("") }
+    val bottomSheetState = rememberStandardBottomSheetState(skipHiddenState = false, initialValue = SheetValue.Hidden)
+    val sheetState = rememberBottomSheetScaffoldState(bottomSheetState = bottomSheetState)
+    val scope = rememberCoroutineScope()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = course?.title ?: "",
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navigation.back() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
-        },
-        content = {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(16.dp),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(it)
-            ) {
-                if (course != null) {
-                    itemsIndexed(course.sections) {sectionIndex, section ->
-                        ExpandableListItem(
-                            section.title,
-                            section.modules,
-                            if (sectionIndex > 0) course.sections[sectionIndex-1].id else "", //prev section id
-                            courseId,
-                            section.id,
-                            sectionIndex,
-                            navigation,
-                            viewModel,
-                            modulesViewModel
+    Box(modifier = Modifier.fillMaxSize()) {
+        BottomSheetScaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = course?.title ?: "",
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { navigation.back() }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    }
+                )
+            },
+            sheetContent = {
+                AudioPlayerScreen(
+                    courseId = courseId,
+                    sectionId = sectionIdState,
+                    moduleId = moduleIdState,
+                    startService = { startService() },
+                    viewModel = playerViewModel,
+                )
+            },
+            sheetDragHandle = {
+                CustomDragHandle {
+                    scope.launch { sheetState.bottomSheetState.hide() }
+                }
+            },
+            sheetPeekHeight = 0.dp,
+            scaffoldState = sheetState,
+            content = {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(it)
+                ) {
+                    if (course != null) {
+                        itemsIndexed(course.sections) { sectionIndex, section ->
+                            ExpandableListItem(
+                                section.title,
+                                section.modules,
+                                if (sectionIndex > 0) course.sections[sectionIndex - 1].id else "", //prev section id
+                                courseId,
+                                section.id,
+                                sectionIndex,
+                                navigation,
+                                viewModel,
+                                modulesViewModel,
+                            ) { courseId, sectionId, moduleId ->
+                                if (modulesViewModel.moduleHasAudio(moduleId)) {
+                                    sectionIdState = sectionId
+                                    moduleIdState = moduleId
+                                    scope.launch {
+                                        sheetState.bottomSheetState.expand()
+                                    }
+                                    //navigation.gotoAudioPlayer(courseId, sectionId, moduleId,)
+                                } else {
+                                    showMessageDialog = true
+                                }
+                            }
+                        }
+
+                        item {
+                            Spacer(modifier = Modifier.height(60.dp))
+                        }
                     }
                 }
             }
+        )
+
+        AnimatedVisibility(
+            visible = sheetState.bottomSheetState.currentValue != SheetValue.Expanded,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
+        ) {
+            NowPlayingBottomBar(
+                viewModel = playerViewModel,
+            ) {
+                scope.launch { sheetState.bottomSheetState.expand() }
+            }
         }
-    )
+
+        if (showMessageDialog) {
+            AppAlertDialog(
+                dialogText = "Audio for this module is being synthesised. It can take up to 10 minutes to synthesise high quality audios for all modules. Please check back later.",
+                onDismissRequest = {
+                    showMessageDialog = false
+                },
+                onConfirmation = {
+                    showMessageDialog = false
+                },
+                icon = Icons.Default.Info
+            )
+        }
+    }
 }
 
 @Composable
@@ -133,7 +215,8 @@ fun ExpandableListItem(
     sectionIndex: Int,
     navigation: AppNavigation,
     viewModel: CourseListViewModel,
-    modulesViewModel: ModulesViewModel
+    modulesViewModel: ModulesViewModel,
+    onPlay: (courseId: String, sectionId: String, moduleId: String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     val quizAttemptsUiState by modulesViewModel.quizAttemptsUiState.collectAsState()
@@ -154,8 +237,7 @@ fun ExpandableListItem(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 8.dp)
-                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                        .background(Purple80),
+                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -203,12 +285,11 @@ fun ExpandableListItem(
                                 navigation.goToModuleContent(courseId, module.id, sectionId)
                             }
                         },{
-                            navigation.gotoAudioPlayer(courseId, sectionId, module.id,)
-                        })
+                            onPlay(courseId, sectionId, module.id,)
+                        }, modulesViewModel)
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 0.dp, horizontal = 16.dp),
                             thickness = 0.5.dp,
-                            color = Purple80
                         )
                     }
                     //add the quiz module
@@ -218,10 +299,11 @@ fun ExpandableListItem(
                             shortDescription = "Take the quiz to complete this section and move on to the next",
                             id = "",
                             content = "",
-                            completed = modulesViewModel.isQuizTaken(sectionId)
+                            completed = modulesViewModel.isQuizTaken(sectionId),
                         ), (modulesViewModel.isQuizTaken(sectionId) || modules[modules.size-1].completed), onClick = {
                             navigation.gotoQuiz(courseId, sectionId)
-                        }
+                        },
+                        viewModel = modulesViewModel
                     )
                 }
             }
@@ -230,7 +312,7 @@ fun ExpandableListItem(
 }
 
 @Composable
-fun ModuleListItem(module: Module, isModuleActive: Boolean, onClick: () -> Unit, onPlay: () -> Unit = {}) {
+fun ModuleListItem(module: Module, isModuleActive: Boolean, onClick: () -> Unit, onPlay: () -> Unit = {}, viewModel: ModulesViewModel) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -263,14 +345,19 @@ fun ModuleListItem(module: Module, isModuleActive: Boolean, onClick: () -> Unit,
         }
         Spacer(modifier = Modifier.width(16.dp))
         IconButton(onClick = { onPlay() }) {
-            Icon(Icons.Filled.PlayArrow, contentDescription = "Listen", tint = Color.Gray)
+
+            Icon(
+                imageVector = if(viewModel.moduleHasAudio(module.id)) Icons.Filled.PlayArrow else Icons.Filled.Timelapse,
+                contentDescription = if(viewModel.moduleHasAudio(module.id)) "Listen" else "Synthesizing Audio",
+                tint = Color.Gray
+            )
         }
         IconButton(onClick = { /* Handle module completion */ }) {
             Box(
                 modifier = Modifier
                     .size(24.dp)
                     .background(
-                        if (module.completed) Purple40 else Color.Gray,
+                        if (module.completed) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.outline,
                         shape = CircleShape
                     ),
                 contentAlignment = Alignment.Center
@@ -287,10 +374,3 @@ fun ModuleListItem(module: Module, isModuleActive: Boolean, onClick: () -> Unit,
         }
     }
 }
-
-data class ModuleItem(
-    val title: String,
-    val timeToRead: String,
-    val isCompleted: Boolean,
-    val image: Painter
-)

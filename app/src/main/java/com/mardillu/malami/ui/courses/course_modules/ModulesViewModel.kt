@@ -2,6 +2,7 @@ package com.mardillu.malami.ui.courses.course_modules
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mardillu.malami.data.PreferencesManager
 import com.mardillu.malami.data.model.course.QuizAttempt
 import com.mardillu.malami.data.model.course.QuizAttempts
 import com.mardillu.malami.data.repository.CoursesRepository
@@ -23,7 +24,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ModulesViewModel @Inject constructor(
     private val courseRepository: CoursesRepository,
-    private val preferencesRepository: PreferencesRepository,
+    private val preferencesManager: PreferencesManager,
 ): ViewModel() {
 
     private val _quizAttemptsUiState = MutableStateFlow<List<QuizAttempt>>(emptyList())
@@ -57,5 +58,10 @@ class ModulesViewModel @Inject constructor(
 //                }
             }
         }
+    }
+
+    fun moduleHasAudio(moduleId: String): Boolean {
+        val audios = preferencesManager.savedCourseAudios
+        return audios.any { it.moduleId == moduleId }
     }
 }

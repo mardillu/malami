@@ -10,15 +10,21 @@ import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
 import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
-import com.google.ai.client.generativeai.type.GenerateContentResponse
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy
+import androidx.work.WorkManager
+import androidx.work.workDataOf
+import com.google.gson.Gson
 import com.mardillu.malami.data.PreferencesManager
 import com.mardillu.malami.data.model.course.Course
 import com.mardillu.malami.data.model.course.ModuleAudio
 import com.mardillu.malami.data.model.course.ModuleContent
-import com.mardillu.malami.data.repository.AudioRepositoryImpl
+import com.mardillu.malami.data.repository.AudioRepository
 import com.mardillu.malami.data.repository.CoursesRepository
-import com.mardillu.malami.ui.courses.create.CreateCourseState
-import com.mardillu.malami.utils.add
+import com.mardillu.malami.utils.addAll
+import com.mardillu.malami.work.TextToSpeechWorker
 import com.mardillu.player_service.service.AudioPlayerServiceHandler
 import com.mardillu.player_service.service.AudioPlayerState
 import com.mardillu.player_service.service.PlayerEvent
@@ -26,7 +32,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
@@ -39,8 +45,9 @@ import javax.inject.Inject
 class AudioPlayerViewModel @Inject constructor(
     private val serviceHandler: AudioPlayerServiceHandler,
     private val preferencesManager: PreferencesManager,
-    private val audioRepository: AudioRepositoryImpl,
+    private val audioRepository: AudioRepository,
     private val coursesRepository: CoursesRepository,
+    private val workManager: WorkManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val _audioFiles = MutableStateFlow<List<ModuleAudio>>(emptyList())
@@ -54,13 +61,16 @@ class AudioPlayerViewModel @Inject constructor(
     var remainder by savedStateHandle.saveable { mutableStateOf(0f) }
     var progressString by savedStateHandle.saveable { mutableStateOf("00:00") }
     var remainderString by savedStateHandle.saveable { mutableStateOf("00:00") }
-    var isPlaying by savedStateHandle.saveable { mutableStateOf(false) }
+    var isPlaying by savedStateHandle.saveable { mutableStateOf(serviceHandler.isPlaying()) }
 
     private val _uiState = MutableStateFlow<UIState>(UIState.Initial)
     val uiState = _uiState.asStateFlow()
 
     private val _mediaItemState = MutableStateFlow(MediaItem.EMPTY)
     val mediaItemState = _mediaItemState.asStateFlow()
+
+    private val _ttsApiKey = MutableStateFlow("")
+    val ttsApiKey: StateFlow<String> get() = _ttsApiKey
 
     init {
         viewModelScope.launch {
@@ -79,9 +89,13 @@ class AudioPlayerViewModel @Inject constructor(
         }
         viewModelScope.launch {
             serviceHandler.nowPlayingModule.collect {
-                _mediaItemState.update { it }
+                _mediaItemState.value = it
             }
         }
+    }
+
+    fun setTtsApiKey(apiKey: String) {
+        _ttsApiKey.update { apiKey }
     }
 
     override fun onCleared() {
@@ -121,17 +135,6 @@ class AudioPlayerViewModel @Inject constructor(
     }
 
     private fun loadData() {
-//        val mediaItem = MediaItem.Builder()
-//            .setUri("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3")
-//            .setMediaMetadata(
-//                MediaMetadata.Builder()
-//                    .setFolderType(MediaMetadata.FOLDER_TYPE_ALBUMS)
-//                    .setArtworkUri(Uri.parse("https://i.pinimg.com/736x/4b/02/1f/4b021f002b90ab163ef41aaaaa17c7a4.jpg"))
-//                    .setAlbumTitle("SoundHelix")
-//                    .setDisplayTitle("Song 1")
-//                    .build()
-//            ).build()
-
         val mediaItemList = mutableListOf<MediaItem>()
         _audioFiles.value.forEach {
             mediaItemList.add(
@@ -151,24 +154,84 @@ class AudioPlayerViewModel @Inject constructor(
             )
         }
 
-//        serviceHandler.addMediaItem(mediaItem)
         serviceHandler.addMediaItemList(mediaItemList)
     }
 
     fun loadCourseAudios(courseId: String, outputDir: File) {
         viewModelScope.launch {
             val audios = preferencesManager.savedCourseAudios
-            val courseContent = audios.filter { it.any { it.courseId == courseId } }
+            val courseContent = audios.filter { it.courseId == courseId }
             if (courseContent.isEmpty()) {
-                convertTextToWav(courseId, outputDir)
+                convertTextsToSpeech(courseId)
                 return@launch
             }
 
-            val audiosFiles = courseContent.flatten()
-            _audioFiles.value = audiosFiles
+            _audioFiles.value = courseContent
             loadData()
         }
     }
+
+    private fun getModuleContent(courses: List<Course>, courseId: String): List<ModuleContent> {
+        val moduleContents = mutableListOf<ModuleContent>()
+        val course = courses.find { it.id == courseId }
+        return course?.let { course ->
+            val courseTitle = course.title
+            course.sections.forEach {
+                val sectionTitle = it.title
+                it.modules.forEachIndexed { index, it ->
+                    val moduleTitle = it.title
+                    val content = it.content
+                    val description = it.shortDescription
+                    val moduleId = it.id
+                    val moduleContent = ModuleContent(
+                        course.id,
+                        moduleId,
+                        courseTitle,
+                        sectionTitle,
+                        moduleTitle,
+                        description,
+                        content,
+                        index + 1
+                    )
+                    moduleContents.add(moduleContent)
+                }
+            }
+            moduleContents
+        } ?: run {
+            Log.d("AudioPlayerViewModel", "Course not found")
+            emptyList()
+        }
+    }
+
+    private fun convertTextsToSpeech(courseId: String) {
+        viewModelScope.launch {
+            val userCourses = coursesRepository.getCourses(true)
+            userCourses.getOrNull()?.let { course ->
+                val moduleContent = getModuleContent(course, courseId)
+                moduleContent.forEach { content ->
+                    val contentJson = Gson().toJson(content)
+                    val inputData = workDataOf(
+                        "content" to contentJson,
+                        "key" to _ttsApiKey.value
+                    )
+                    val constraint = Constraints.Builder()
+                        //.setRequiredNetworkType(NetworkType.CONNECTED)
+                        .build()
+                    val workRequest = OneTimeWorkRequestBuilder<TextToSpeechWorker>()
+                        .setInputData(inputData)
+                        .setConstraints(constraint)
+                        .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+                        .build()
+                    workManager.enqueueUniqueWork(
+                        content.moduleId,
+                        ExistingWorkPolicy.REPLACE,
+                        workRequest,
+                    )
+                }
+            }
+        }
+    }
+
 
     private fun convertTextToWav(courseId: String, outputDir: File) {
         viewModelScope.launch {
@@ -180,17 +243,27 @@ class AudioPlayerViewModel @Inject constructor(
                     val courseTitle = course.title
                     course.sections.forEach {
                         val sectionTitle = it.title
-                        it.modules.forEach {
+                        it.modules.forEachIndexed { index, it ->
                             val moduleTitle = it.title
                             val content = it.content
                             val description = it.shortDescription
-                            val moduleContent = ModuleContent(courseId, courseTitle, sectionTitle, moduleTitle, description, content,)
+                            val moduleId = it.id
+                            val moduleContent = ModuleContent(
+                                courseId,
+                                moduleId,
+                                courseTitle,
+                                sectionTitle,
+                                moduleTitle,
+                                description,
+                                content,
+                                index + 1
+                            )
                             moduleContents.add(moduleContent)
                         }
                     }
-                    val (audios, _) = audioRepository.convertTextToWav(moduleContents, outputDir)
+                    val (audios, _) = audioRepository.convertTextToWavLocal(moduleContents, outputDir)
                     _audioFiles.value = audios
-                    val updatedAudios = preferencesManager.savedCourseAudios.add(audios)
+                    val updatedAudios = preferencesManager.savedCourseAudios.addAll(audios)
                     preferencesManager.savedCourseAudios = updatedAudios
                     loadData()
                 } ?: run {

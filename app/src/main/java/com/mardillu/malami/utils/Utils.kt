@@ -14,21 +14,65 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarVisuals
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import kotlinx.coroutines.launch
 
 @Composable
 fun ShowToast(message: String) {
     val context = LocalContext.current
     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SnackbarExample() {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val message = "This is a snackbar"
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    ) { paddingValues ->
+        Column(modifier = Modifier.padding(paddingValues)) {
+            scope.launch {
+                snackbarHostState.showSnackbar(
+                    message = message,
+                    actionLabel = "OK"
+                )
+            }
+        }
+    }
+
+    LaunchedEffect(snackbarHostState) {
+        snackbarHostState.currentSnackbarData?.dismiss() // Ensure any existing snackbar is dismissed
+    }
+
+    LaunchedEffect(snackbarHostState.currentSnackbarData) {
+        snackbarHostState.currentSnackbarData?.let { snackbarData ->
+            snackbarData.visuals
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -40,7 +40,6 @@ fun QuizResultScreen(
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
     ) {
         Column(
             modifier = Modifier
@@ -95,7 +94,6 @@ fun QuizResultScreen(
                 text = message,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(bottom = 16.dp)
             )

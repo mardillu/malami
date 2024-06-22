@@ -10,3 +10,10 @@ fun <E> List<E>.add(item: E): List<E> {
 
     return mutableList
 }
+
+fun <E> List<E>.addAll(item: List<E>): List<E> {
+    val mutableList = this.toMutableList()
+    mutableList.add(item)
+
+    return mutableList
+}

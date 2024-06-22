@@ -6,6 +6,7 @@ package com.mardillu.malami.data.model.course
  */
 data class ModuleAudio(
     val courseId: String,
+    val moduleId: String,
     val courseTitle: String,
     val sectionTitle: String,
     val moduleTitle: String,
@@ -15,9 +16,11 @@ data class ModuleAudio(
 
 data class ModuleContent(
     val courseId: String,
+    val moduleId: String,
     val courseTitle: String,
     val sectionTitle: String,
     val moduleTitle: String,
     val moduleDescription: String,
-    val moduleContent: String
+    val moduleContent: String,
+    val sequence: Int
 )
