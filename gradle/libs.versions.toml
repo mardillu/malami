@@ -2,7 +2,8 @@
 agp = "8.4.1"
 converterGson = "2.9.0"
 core = "4.6.2"
-generativeai = "0.7.0"
+credentials = "1.2.2"
+generativeai = "0.8.0"
 glide = "4.15.1"
 hiltWork = "1.2.0"
 kotlin = "1.9.0"
@@ -32,6 +33,7 @@ kapt = "1.2.0"
 googleServices = "4.4.2"
 composeRuntime = "1.6.7"
 coroutinesCore = "1.8.0"
+onetapcompose = "1.0.12"
 playServicesAuth = "21.2.0"
 workRuntimeKtx = "2.9.0"
 hiltCommon = "1.2.0"
@@ -39,10 +41,13 @@ media3Session = "1.3.1"
 media3Ui = "1.3.1"
 appcompat = "1.7.0"
 material = "1.12.0"
+googleid = "1.1.0"
 
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
+androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentials" }
 androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltWork" }
 androidx-legacy-support-v4 = { module = "androidx.legacy:legacy-support-v4", version.ref = "legacySupportV4" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
@@ -81,6 +86,7 @@ com-google-firebase-firestore = { group = "com.google.firebase", name = "firebas
 com-google-firebase-auth = { group = "com.google.firebase", name = "firebase-auth-ktx" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 markdown-linkify = { module = "io.noties.markwon:linkify", version.ref = "core" }
+onetapcompose = { module = "com.github.stevdza-san:OneTapCompose", version.ref = "onetapcompose" }
 org-jetbrains-kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinCoroutines" }
 com-google-firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 org-jacoco-core = { group = "org.jacoco", name = "org.jacoco.core", version.ref = "jacocoVersion" }
@@ -99,6 +105,7 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "converterGson" }
+googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
 
 
 

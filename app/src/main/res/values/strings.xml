@@ -1,4 +1,5 @@
 <resources>
+    <string name="google_cloud_server_client_id">881447754529-oenvfnnfjbb36jp0kj3eo4k28aljb639.apps.googleusercontent.com</string>
     <string name="app_name">Mala.Mi</string>
     <string name="hide">Hide</string>
     <string name="show">Show</string>

@@ -2,6 +2,8 @@ package com.mardillu.malami.ui.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.mardillu.malami.data.PreferencesManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,15 +20,29 @@ import javax.inject.Inject
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val auth: FirebaseAuth,
-    private val preferencesManager: PreferencesManager
+    private val authRepository: AuthRepository,
+    private val preferencesManager: PreferencesManager,
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> get() = _authState
 
-//    init {
-//        checkAuthState()
-//    }
+    fun handleGoogleSignInResult(task: Task<GoogleSignInAccount>) {
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            try {
+                val account = task.getResult(Exception::class.java)
+                val isNewUser = authRepository.loginWithGoogle(account)
+                if (isNewUser) {
+                    _authState.value = AuthState.Authenticated("signup")
+                } else {
+                    _authState.value = AuthState.Authenticated("login")
+                }
+            } catch (e: Exception) {
+                _authState.value = AuthState.Error(e.message ?: "Google sign-in failed")
+            }
+        }
+    }
 
     fun login(email: String, password: String) {
         viewModelScope.launch {

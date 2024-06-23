@@ -1,6 +1,5 @@
 package com.mardillu.malami.data.repository
 
-import android.util.Log
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.BlockThreshold
 import com.google.ai.client.generativeai.type.GenerateContentResponse
@@ -18,7 +17,6 @@ import com.mardillu.malami.data.model.course.LearningSchedule
 import com.mardillu.malami.data.model.course.Module
 import com.mardillu.malami.data.model.course.Quiz
 import com.mardillu.malami.data.model.course.QuizAttempt
-import com.mardillu.malami.data.model.course.QuizAttempts
 import com.mardillu.malami.data.model.course.Section
 import com.mardillu.malami.data.model.course.UserCourses
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,7 +29,10 @@ import javax.inject.Inject
  * Created on 21/05/2024 at 10:35 pm
  * @author mardillu
  */
-class CoursesRepository @Inject constructor(private val firestore: FirebaseFirestore) {
+class CoursesRepository @Inject constructor(
+    private val firestore: FirebaseFirestore,
+    private val auth: FirebaseAuth
+) {
     private val _userCoursesFlow = MutableStateFlow<List<Course>>(emptyList())
     val userCoursesFlow: StateFlow<List<Course>> get() = _userCoursesFlow
     private var listenerRegistration: ListenerRegistration? = null
@@ -74,7 +75,7 @@ class CoursesRepository @Inject constructor(private val firestore: FirebaseFires
     }
 
     suspend fun saveCourse(course: List<Course>): Result<Unit>  {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
+        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
 
         return try {
             firestore.collection("courses")
@@ -88,7 +89,7 @@ class CoursesRepository @Inject constructor(private val firestore: FirebaseFires
     }
 
     fun startListeningForUserCourses(){
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val userId = auth.currentUser?.uid ?: return
 
         listenerRegistration = firestore.collection("courses")
             .document(userId)
@@ -165,7 +166,7 @@ class CoursesRepository @Inject constructor(private val firestore: FirebaseFires
     }
 
     fun updateModuleCompletedStatusById(courseId: String, sectionId: String, moduleId: String, newStatus: Boolean) {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val userId = auth.currentUser?.uid ?: return
         val courseRef = firestore.collection("courses").document(userId)
 
         firestore.runTransaction { transaction ->
@@ -209,7 +210,7 @@ class CoursesRepository @Inject constructor(private val firestore: FirebaseFires
     }
 
     suspend fun getCourses(fromCache: Boolean): Result<List<Course>> {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
+        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
 
         return try {
             val courses = if (fromCache) {
@@ -286,7 +287,7 @@ class CoursesRepository @Inject constructor(private val firestore: FirebaseFires
     }
 
     suspend fun getQuizAttempts(): Result<List<QuizAttempt>> {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
+        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
 
         return try {
             val courses = firestore.collection("quizAttempts")
@@ -319,7 +320,7 @@ class CoursesRepository @Inject constructor(private val firestore: FirebaseFires
     }
 
     suspend fun saveQuizAttempt(attempt: QuizAttempt): Result<Unit>  {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
+        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
 
         return try {
             firestore.collection("quizAttempts")

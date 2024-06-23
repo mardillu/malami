@@ -4,8 +4,11 @@ package com.mardillu.malami.di
  * Created on 19/05/2024 at 1:27 pm
  * @author mardillu
  */
+import android.app.Application
 import android.content.Context
 import androidx.work.WorkManager
+import com.google.android.gms.auth.api.identity.BeginSignInRequest
+import com.google.android.gms.auth.api.identity.Identity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.mardillu.malami.data.PreferencesManager
@@ -15,6 +18,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module

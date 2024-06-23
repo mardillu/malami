@@ -10,10 +10,13 @@ import javax.inject.Inject
  * Created on 19/05/2024 at 1:21 pm
  * @author mardillu
  */
-class PreferencesRepository @Inject constructor(private val firestore: FirebaseFirestore) {
+class PreferencesRepository @Inject constructor(
+    private val firestore: FirebaseFirestore,
+    private val auth: FirebaseAuth
+) {
 
     suspend fun saveUserPreferences(userPreferences: UserPreferences): Result<Unit> {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
+        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
 
         return try {
             firestore.collection("userPreferences")
@@ -27,7 +30,7 @@ class PreferencesRepository @Inject constructor(private val firestore: FirebaseF
     }
 
     suspend fun getUserPreferences(): Result<UserPreferences?> {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
+        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
 
         return try {
             val userPreferences = firestore.collection("userPreferences")
