@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -57,6 +58,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -73,6 +75,7 @@ import com.mardillu.malami.ui.courses.player.AudioPlayerViewModel
 import com.mardillu.malami.ui.courses.player.CustomDragHandle
 import com.mardillu.malami.ui.navigation.AppNavigation
 import com.mardillu.malami.utils.AppAlertDialog
+import com.mardillu.simple_image_generator.drawTextAsImage
 import kotlinx.coroutines.launch
 
 /**
@@ -321,7 +324,10 @@ fun ModuleListItem(module: Module, isModuleActive: Boolean, onClick: () -> Unit,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
-            painter = painterResource(id = R.drawable.img),
+            bitmap = drawTextAsImage(
+                text = module.title,
+                isDarkTheme = isSystemInDarkTheme()
+            ).asImageBitmap(),
             contentDescription = null,
             modifier = Modifier
                 .size(64.dp)

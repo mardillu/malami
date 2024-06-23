@@ -2,6 +2,7 @@ package com.mardillu.malami.ui.courses.player
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,14 +31,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -46,7 +47,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mardillu.malami.BuildConfig
-import kotlinx.coroutines.delay
+import com.mardillu.simple_image_generator.drawTextAsImage
 
 /**
  * Created on 08/06/2024 at 10:39 pm
@@ -107,13 +108,18 @@ fun MusicPlayerScreen(viewModel: AudioPlayerViewModel) {
         )
         Spacer(modifier = Modifier.height(20.dp))
         Image(
-            imageVector = Icons.AutoMirrored.Filled.MenuBook,
+            bitmap = drawTextAsImage(
+                text =  mediaItemState.value.mediaMetadata.title?.toString() ?: "-",
+                isDarkTheme = isSystemInDarkTheme()
+            ).asImageBitmap(),
             contentDescription = "Audio Art",
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
                 .align(Alignment.CenterHorizontally)
-                .background(Color.Gray, RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)),
+
         )
         Spacer(modifier = Modifier.weight(1f))
         Text(

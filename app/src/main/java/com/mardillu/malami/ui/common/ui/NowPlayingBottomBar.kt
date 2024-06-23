@@ -3,6 +3,7 @@ package com.mardillu.malami.ui.common.ui
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -22,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -29,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.mardillu.malami.R
 import com.mardillu.malami.ui.courses.player.AudioPlayerViewModel
 import com.mardillu.malami.ui.courses.player.UIEvent
+import com.mardillu.simple_image_generator.drawTextAsImage
 
 /**
  * Created on 22/06/2024 at 2:51 pm
@@ -53,7 +56,10 @@ fun NowPlayingBottomBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                painter = painterResource(id = R.drawable.img),
+                bitmap = drawTextAsImage(
+                    text =  mediaItemState.value.mediaMetadata.title?.toString() ?: "-",
+                    isDarkTheme = isSystemInDarkTheme()
+                ).asImageBitmap(),
                 contentDescription = "Album Art",
                 modifier = Modifier
                     .size(48.dp)

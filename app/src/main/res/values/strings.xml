@@ -1,5 +1,4 @@
 <resources>
-    <string name="google_cloud_server_client_id">881447754529-oenvfnnfjbb36jp0kj3eo4k28aljb639.apps.googleusercontent.com</string>
     <string name="app_name">Mala.Mi</string>
     <string name="hide">Hide</string>
     <string name="show">Show</string>
@@ -16,10 +15,11 @@
 <!--
 certificates
 payment integration
-Signup/signin with google
+
 courses to audio playlist
 AI Explainability
 Learning plan and reminders
-settings -> update learning styles, notification prefs ...
+settings -> update learning styles, notification prefs, logout ...
+
 X course images
 -->

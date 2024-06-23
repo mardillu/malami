@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -61,6 +63,7 @@ import com.mardillu.malami.R
 import com.mardillu.malami.data.model.course.Course
 import com.mardillu.malami.ui.common.ui.EmptyState
 import com.mardillu.malami.ui.navigation.AppNavigation
+import com.mardillu.simple_image_generator.drawTextAsImage
 
 /**
  * Created on 20/05/2024 at 11:04 am
@@ -253,7 +256,10 @@ fun CompactCourseListItem(course: Course, navigation: AppNavigation,) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                painter = painterResource(id = R.drawable.img),
+                bitmap = drawTextAsImage(
+                    text = course.title,
+                    isDarkTheme = isSystemInDarkTheme()
+                ).asImageBitmap(),
                 contentDescription = null,
                 modifier = Modifier
                     .size(64.dp)
@@ -304,7 +310,10 @@ fun CourseListItem(course: Course, navigation: AppNavigation,) {
     ) {
         Column {
             Image(
-                painter = painterResource(id = R.drawable.img),
+                bitmap = drawTextAsImage(
+                    text = course.title,
+                    isDarkTheme = isSystemInDarkTheme()
+                ).asImageBitmap(),
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -355,7 +364,10 @@ fun CurrentCourseCard(course: Course, progress: Float, navigation: AppNavigation
             modifier = Modifier.fillMaxSize()
         ) {
             Image(
-                painter = painterResource(id = R.drawable.img),
+               bitmap = drawTextAsImage(
+                   text = course.title,
+                   isDarkTheme = isSystemInDarkTheme()
+               ).asImageBitmap(),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop

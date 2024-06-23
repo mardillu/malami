@@ -4,6 +4,7 @@ import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.BlockThreshold
 import com.google.ai.client.generativeai.type.GenerateContentResponse
 import com.google.ai.client.generativeai.type.HarmCategory
+import com.google.ai.client.generativeai.type.RequestOptions
 import com.google.ai.client.generativeai.type.SafetySetting
 import com.google.ai.client.generativeai.type.content
 import com.google.ai.client.generativeai.type.generationConfig
@@ -45,7 +46,7 @@ class CoursesRepository @Inject constructor(
                 temperature = 1f
                 topK = 64
                 topP = 0.95f
-                maxOutputTokens = 200_000
+                maxOutputTokens = 500_000
                 responseMimeType = "application/json"
             },
             safetySettings = listOf(
@@ -62,6 +63,7 @@ class CoursesRepository @Inject constructor(
                             "then modules. Each section comes with a quiz"
                 )
             },
+            requestOptions = RequestOptions(timeout = 5 * 60_000),
         )
 
         val chat = model.startChat()
