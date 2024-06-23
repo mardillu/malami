@@ -50,6 +50,7 @@ android {
         }
         val geminiApiKey: String = localProperties.getProperty("GEMINI_API_KEY") ?: ""
         val cloudSpeechApiKey: String = localProperties.getProperty("CLOUD_SPEECH_API_KEY") ?: ""
+        val loginWithGoogleWebClientId: String = localProperties.getProperty("LOGIN_WITH_GOOGLE_WEB_CLIENT_ID") ?: ""
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -58,11 +59,13 @@ android {
             )
             buildConfigField("String", "GEMINI_API_KEY", geminiApiKey)
             buildConfigField("String", "CLOUD_SPEECH_API_KEY", cloudSpeechApiKey)
+            buildConfigField("String", "LOGIN_WITH_GOOGLE_WEB_CLIENT_ID", loginWithGoogleWebClientId)
         }
 
         debug {
             buildConfigField("String", "GEMINI_API_KEY", geminiApiKey)
             buildConfigField("String", "CLOUD_SPEECH_API_KEY", cloudSpeechApiKey)
+            buildConfigField("String", "LOGIN_WITH_GOOGLE_WEB_CLIENT_ID", loginWithGoogleWebClientId)
         }
     }
     compileOptions {
@@ -87,6 +90,7 @@ android {
 
 dependencies {
     implementation(project(":player-service"))
+    implementation(project(":auth-with-google"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -122,10 +126,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.logging.interceptor)
-    implementation(libs.play.services.auth)
-    implementation(libs.androidx.credentials)
-    implementation(libs.androidx.credentials.play.services.auth)
-    implementation(libs.googleid)
+
     //implementation(libs.onetapcompose)
 
 

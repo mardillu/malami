@@ -32,3 +32,4 @@ dependencyResolutionManagement {
 rootProject.name = "malami"
 include(":app")
 include(":player-service")
+include(":auth-with-google")

@@ -1,24 +1,17 @@
 plugins {
     alias(libs.plugins.com.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
-    id("dagger.hilt.android.plugin")
-    id("kotlin-kapt")
 }
 
 android {
-    namespace = "com.mardillu.player_service"
+    namespace = "com.mardillu.auth_with_google"
     compileSdk = 34
 
     defaultConfig {
-        //applicationId = "com.mardillu.player_service"
         minSdk = 24
-        lint {
-            targetSdk = 34
-        }
-//        versionCode = 1
-//        versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
     }
 
     buildTypes {
@@ -37,22 +30,39 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+
+    buildFeatures {
+        compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.1"
+    }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
 }
 
 dependencies {
 
+    implementation(libs.play.services.auth)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+    implementation(libs.androidx.material3)
+
+    implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.jwtdecode)
+    implementation(libs.androidx.ui.tooling.preview)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
-    //implementation(libs.androidx.material3)
     //implementation(libs.material)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    implementation(libs.com.google.dagger.hilt.android)
-    implementation(libs.androidx.media3.session)
-    implementation(libs.androidx.media3.ui)
-    implementation(libs.androidx.media3.exoplayer)
-    implementation(libs.androidx.legacy.support.v4)
-    implementation(libs.glide)
-    kapt(libs.hilt.kapt)
 }

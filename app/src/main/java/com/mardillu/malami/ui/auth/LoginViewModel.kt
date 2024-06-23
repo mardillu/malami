@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.mardillu.malami.data.PreferencesManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,20 +28,24 @@ class AuthViewModel @Inject constructor(
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> get() = _authState
 
-    fun handleGoogleSignInResult(task: Task<GoogleSignInAccount>) {
+    fun finishGoogleSignIn(s: String) {
+        _authState.value = AuthState.Loading
         viewModelScope.launch {
-            _authState.value = AuthState.Loading
-            try {
-                val account = task.getResult(Exception::class.java)
-                val isNewUser = authRepository.loginWithGoogle(account)
-                if (isNewUser) {
-                    _authState.value = AuthState.Authenticated("signup")
-                } else {
-                    _authState.value = AuthState.Authenticated("login")
+            val firebaseCredential = GoogleAuthProvider.getCredential(s, null)
+            val authResult = auth.signInWithCredential(firebaseCredential).await()
+                when (authResult.additionalUserInfo?.isNewUser) {
+                    true -> {
+                        _authState.value = AuthState.Authenticated("signup")
+                        preferencesManager.isLoggedIn = true
+                    }
+                    false -> {
+                        _authState.value = AuthState.Authenticated("login")
+                        preferencesManager.isLoggedIn = true
+                    }
+                    null -> {
+                        _authState.value = AuthState.Error("Authentication failed")
+                    }
                 }
-            } catch (e: Exception) {
-                _authState.value = AuthState.Error(e.message ?: "Google sign-in failed")
-            }
         }
     }
 
