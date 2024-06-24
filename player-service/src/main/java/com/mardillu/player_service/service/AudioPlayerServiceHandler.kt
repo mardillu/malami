@@ -1,6 +1,7 @@
 package com.mardillu.player_service.service
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
@@ -43,11 +44,9 @@ class AudioPlayerServiceHandler @Inject constructor(
         when (playerEvent) {
             PlayerEvent.Backward -> {
                 player.seekToPreviousMediaItem()
-                //player.seekBack()
             }
             PlayerEvent.Forward -> {
                 player.seekToNextMediaItem()
-                //player.seekForward()
             }
             PlayerEvent.PlayPause -> {
                 if (player.isPlaying) {
@@ -76,6 +75,10 @@ class AudioPlayerServiceHandler @Inject constructor(
                 _audioPlayerState.value =
                     AudioPlayerState.Ready(player.duration)
             }
+            ExoPlayer.STATE_ENDED -> {
+                Log.d("AudioPlayerServiceHandler", "STATE_ENDED, ${player.mediaMetadata.title.toString()}")
+                _audioPlayerState.value = AudioPlayerState.MediaItemTransition(player.currentMediaItem)
+            }
         }
     }
 
@@ -88,6 +91,13 @@ class AudioPlayerServiceHandler @Inject constructor(
             }
         } else {
             stopProgressUpdate()
+        }
+    }
+
+    override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+        if (mediaItem != null) {
+            _nowPlayingModule.value = mediaItem
+            _audioPlayerState.value = AudioPlayerState.MediaItemTransition(mediaItem)
         }
     }
 
@@ -121,4 +131,6 @@ sealed class AudioPlayerState {
     data class Progress(val progress: Long) : AudioPlayerState()
     data class Buffering(val progress: Long) : AudioPlayerState()
     data class Playing(val isPlaying: Boolean) : AudioPlayerState()
+    data class MediaItemTransition(val mediaItem: MediaItem?) : AudioPlayerState()
+
 }

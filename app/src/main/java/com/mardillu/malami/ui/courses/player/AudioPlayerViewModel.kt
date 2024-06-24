@@ -1,6 +1,7 @@
 package com.mardillu.malami.ui.courses.player
 
 import android.net.Uri
+import android.os.Bundle
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
@@ -20,7 +21,6 @@ import com.google.gson.Gson
 import com.mardillu.malami.data.PreferencesManager
 import com.mardillu.malami.data.model.course.Course
 import com.mardillu.malami.data.model.course.ModuleAudio
-import com.mardillu.malami.data.model.course.ModuleContent
 import com.mardillu.malami.data.repository.AudioRepository
 import com.mardillu.malami.data.repository.CoursesRepository
 import com.mardillu.malami.utils.addAll
@@ -29,6 +29,7 @@ import com.mardillu.player_service.service.AudioPlayerServiceHandler
 import com.mardillu.player_service.service.AudioPlayerState
 import com.mardillu.player_service.service.PlayerEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,6 +40,7 @@ import java.io.File
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlin.math.truncate
 
 @OptIn(SavedStateHandleSaveableApi::class)
 @HiltViewModel
@@ -84,6 +86,15 @@ class AudioPlayerViewModel @Inject constructor(
                         duration = mediaState.duration
                         _uiState.value = UIState.Ready
                     }
+                    is AudioPlayerState.MediaItemTransition -> {
+                        updateModuleCompletedStatusById(
+                            mediaState.mediaItem?.mediaMetadata?.extras?.getString("courseId") as String,
+                            mediaState.mediaItem?.mediaMetadata?.extras?.getString("sectionId") as String,
+                            mediaState.mediaItem?.mediaMetadata?.extras?.getString("moduleId") as String,
+                            true
+                        )
+                        //Log.d("AudioPlayerViewModel", "MediaItemTransition, ${mediaState.mediaItem?.mediaMetadata?.title.toString()}")
+                    }
                 }
             }
         }
@@ -104,6 +115,12 @@ class AudioPlayerViewModel @Inject constructor(
         }
     }
 
+    private fun updateModuleCompletedStatusById(courseId: String, sectionId: String, moduleId: String, completed: Boolean) {
+        viewModelScope.launch {
+            coursesRepository.updateModuleCompletedStatusById(courseId, sectionId, moduleId, completed)
+        }
+    }
+
     fun onUIEvent(uiEvent: UIEvent) = viewModelScope.launch {
         when (uiEvent) {
             UIEvent.Backward -> serviceHandler.onPlayerEvent(PlayerEvent.Backward)
@@ -120,7 +137,7 @@ class AudioPlayerViewModel @Inject constructor(
         }
     }
 
-    fun formatDuration(duration: Long): String {
+    private fun formatDuration(duration: Long): String {
         val minutes: Long = TimeUnit.MINUTES.convert(duration, TimeUnit.MILLISECONDS)
         val seconds: Long = (TimeUnit.SECONDS.convert(duration, TimeUnit.MILLISECONDS)
                 - minutes * TimeUnit.SECONDS.convert(1, TimeUnit.MINUTES))
@@ -136,7 +153,7 @@ class AudioPlayerViewModel @Inject constructor(
 
     private fun loadData() {
         val mediaItemList = mutableListOf<MediaItem>()
-        _audioFiles.value.forEach {
+        _audioFiles.value.sortedBy { it.sequence }.forEach {
             mediaItemList.add(
                 MediaItem.Builder()
                     .setUri(it.audioUri)
@@ -149,6 +166,11 @@ class AudioPlayerViewModel @Inject constructor(
                         .setSubtitle(it.moduleTitle)
                         .setDescription(it.moduleDescription)
                         .setTitle(it.moduleTitle)
+                        .setExtras(Bundle().apply {
+                            putString("courseId", it.courseId)
+                            putString("sectionId", it.sectionId)
+                            putString("moduleId", it.moduleId)
+                        })
                         .build()
                     ).build()
             )
@@ -171,27 +193,32 @@ class AudioPlayerViewModel @Inject constructor(
         }
     }
 
-    private fun getModuleContent(courses: List<Course>, courseId: String): List<ModuleContent> {
-        val moduleContents = mutableListOf<ModuleContent>()
+    private fun getModuleContent(courses: List<Course>, courseId: String): List<ModuleAudio> {
+        val moduleContents = mutableListOf<ModuleAudio>()
         val course = courses.find { it.id == courseId }
         return course?.let { course ->
             val courseTitle = course.title
-            course.sections.forEach {
-                val sectionTitle = it.title
-                it.modules.forEachIndexed { index, it ->
-                    val moduleTitle = it.title
-                    val content = it.content
-                    val description = it.shortDescription
-                    val moduleId = it.id
-                    val moduleContent = ModuleContent(
+            var sequence = 0
+            course.sections.forEach { sctn ->
+                val sectionTitle = sctn.title
+                val sectionId = sctn.id
+                sctn.modules.forEach { mdl ->
+                    sequence += 1
+                    val moduleTitle = mdl.title
+                    val content = mdl.content
+                    val description = mdl.shortDescription
+                    val moduleId = mdl.id
+                    val moduleContent = ModuleAudio(
                         course.id,
                         moduleId,
+                        sectionId,
                         courseTitle,
                         sectionTitle,
                         moduleTitle,
                         description,
                         content,
-                        index + 1
+                        sequence,
+                        ""
                     )
                     moduleContents.add(moduleContent)
                 }
@@ -238,25 +265,30 @@ class AudioPlayerViewModel @Inject constructor(
             val userCourses = coursesRepository.getCourses(true)
             userCourses.getOrNull()?.let { courses ->
                 val course = courses.find { it.id == courseId }
-                val moduleContents = mutableListOf<ModuleContent>()
+                val moduleContents = mutableListOf<ModuleAudio>()
                 course?.let { course ->
                     val courseTitle = course.title
-                    course.sections.forEach {
-                        val sectionTitle = it.title
-                        it.modules.forEachIndexed { index, it ->
-                            val moduleTitle = it.title
-                            val content = it.content
-                            val description = it.shortDescription
-                            val moduleId = it.id
-                            val moduleContent = ModuleContent(
+                    var sequence = 0
+                    course.sections.forEach { sctn ->
+                        sequence += 1
+                        val sectionTitle = sctn.title
+                        val sectionId = sctn.id
+                        sctn.modules.forEach { mdl ->
+                            val moduleTitle = mdl.title
+                            val content = mdl.content
+                            val description = mdl.shortDescription
+                            val moduleId = mdl.id
+                            val moduleContent = ModuleAudio(
                                 courseId,
                                 moduleId,
+                                sectionId,
                                 courseTitle,
                                 sectionTitle,
                                 moduleTitle,
                                 description,
                                 content,
-                                index + 1
+                                sequence,
+                                ""
                             )
                             moduleContents.add(moduleContent)
                         }

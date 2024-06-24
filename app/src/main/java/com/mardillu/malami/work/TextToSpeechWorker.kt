@@ -6,11 +6,11 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
+import com.google.ai.client.generativeai.type.content
 import com.google.gson.Gson
 import com.mardillu.malami.data.PreferencesManager
 import com.mardillu.malami.data.model.TextToSpeechResponse
 import com.mardillu.malami.data.model.course.ModuleAudio
-import com.mardillu.malami.data.model.course.ModuleContent
 import com.mardillu.malami.data.repository.AudioRepository
 import com.mardillu.malami.network.NetworkResult
 import com.mardillu.malami.utils.NotificationConstants.TTS_CHANNEL_ID
@@ -41,7 +41,7 @@ class TextToSpeechWorker @AssistedInject constructor(
         val contentJson = workerParams.inputData.getString("content") ?: return Result.failure()
         val apiKey = workerParams.inputData.getString("key") ?: return Result.failure()
 
-        val moduleContent: ModuleContent = Gson().fromJson(contentJson, ModuleContent::class.java)
+        val moduleContent: ModuleAudio = Gson().fromJson(contentJson, ModuleAudio::class.java)
         return try {
             val moduleSequence = "Module ${moduleContent.sequence}"
             val moduleTitle = moduleContent.moduleTitle
@@ -67,24 +67,15 @@ class TextToSpeechWorker @AssistedInject constructor(
     }
 
     @OptIn(ExperimentalEncodingApi::class)
-    private fun saveAudioContent(moduleContent: ModuleContent, audioContent: String) {
+    private fun saveAudioContent(moduleContent: ModuleAudio, audioContent: String) {
         val existingAudios = preferencesManager.savedCourseAudios
         val audioFile = File(context.filesDir.absolutePath + "/${moduleContent.courseId}", "audio_audio_${moduleContent.moduleId}.wav")
         if (!audioFile.exists()){
             audioFile.parentFile?.mkdirs();
             audioFile.createNewFile()
         }
-        val moduleAudio = ModuleAudio(
-            courseId = moduleContent.courseId,
-            moduleId = moduleContent.moduleId,
-            courseTitle = moduleContent.courseTitle,
-            sectionTitle = moduleContent.sectionTitle,
-            moduleTitle = moduleContent.moduleTitle,
-            moduleDescription = moduleContent.moduleDescription,
-            audioUri = audioFile.absolutePath
-        )
 
-        val updatedAudio = existingAudios.add(moduleAudio)
+        val updatedAudio = existingAudios.add(moduleContent)
         preferencesManager.savedCourseAudios = updatedAudio
         val audioBytes = Base64.decode(audioContent,)
         audioFile.writeBytes(audioBytes)
@@ -95,7 +86,7 @@ class TextToSpeechWorker @AssistedInject constructor(
         var moduleTitle = "modules"
         var courseTitle = "courses"
         contentJson?.let {
-            val moduleContent: ModuleContent = Gson().fromJson(it, ModuleContent::class.java)
+            val moduleContent: ModuleAudio = Gson().fromJson(it, ModuleAudio::class.java)
             moduleTitle = moduleContent.moduleTitle
             courseTitle = moduleContent.courseTitle
         }

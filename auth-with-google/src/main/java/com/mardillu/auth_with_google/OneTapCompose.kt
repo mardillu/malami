@@ -128,7 +128,7 @@ fun OneTapSignInWithGoogle(
                     }
                 } catch (e: Exception) {
                     if (e.message != null) {
-                        if (e.message!!.contains("No credentials available")) {
+                        if (e.message!!.contains("Cannot find a matching credential.")) {
                             handleCredentialsNotAvailable(
                                 context = context,
                                 state = state,
@@ -214,7 +214,7 @@ private suspend fun handleCredentialsNotAvailable(
         )
     } catch (e: GetCredentialException) {
         try {
-            if (e.message!!.contains("No credentials available")) {
+            if (e.message!!.contains("Cannot find a matching credential.")) {
                 openGoogleAccountSettings(context = context)
             }
             val errorMessage = if (e.message != null) {

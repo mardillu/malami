@@ -7,20 +7,12 @@ package com.mardillu.malami.data.model.course
 data class ModuleAudio(
     val courseId: String,
     val moduleId: String,
-    val courseTitle: String,
-    val sectionTitle: String,
-    val moduleTitle: String,
-    val moduleDescription: String,
-    val audioUri: String
-)
-
-data class ModuleContent(
-    val courseId: String,
-    val moduleId: String,
+    val sectionId: String,
     val courseTitle: String,
     val sectionTitle: String,
     val moduleTitle: String,
     val moduleDescription: String,
     val moduleContent: String,
-    val sequence: Int
+    val sequence: Int,
+    val audioUri: String
 )

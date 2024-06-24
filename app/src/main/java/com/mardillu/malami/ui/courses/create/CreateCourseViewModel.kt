@@ -15,7 +15,6 @@ import com.google.gson.Gson
 import com.mardillu.malami.data.model.UserPreferences
 import com.mardillu.malami.data.model.course.Course
 import com.mardillu.malami.data.model.course.ModuleAudio
-import com.mardillu.malami.data.model.course.ModuleContent
 import com.mardillu.malami.data.repository.CoursesRepository
 import com.mardillu.malami.data.repository.PreferencesRepository
 import com.mardillu.malami.ui.courses.quiz.UIState
@@ -52,8 +51,8 @@ class CreateCourseViewModel @Inject constructor(
     private val _newCourseId = MutableStateFlow("")
     val newCourseId: StateFlow<String> get() = _newCourseId
 
-    private val _moduleContents = MutableStateFlow<List<ModuleContent>>(emptyList())
-    val moduleContents: StateFlow<List<ModuleContent>> get() = _moduleContents
+    private val _moduleContents = MutableStateFlow<List<ModuleAudio>>(emptyList())
+    val moduleContents: StateFlow<List<ModuleAudio>> get() = _moduleContents
 
     private val _ttsApiKey = MutableStateFlow("")
     val ttsApiKey: StateFlow<String> get() = _ttsApiKey
@@ -166,27 +165,33 @@ class CreateCourseViewModel @Inject constructor(
         }
     }
 
-    private fun getModuleContent(courses: List<Course>): List<ModuleContent> {
-        val moduleContents = mutableListOf<ModuleContent>()
+    private fun getModuleContent(courses: List<Course>): List<ModuleAudio> {
+        val moduleContents = mutableListOf<ModuleAudio>()
         val course = courses.find { it.id == _newCourseId.value }
         return course?.let { course ->
             val courseTitle = course.title
-            course.sections.forEach {
-                val sectionTitle = it.title
-                it.modules.forEachIndexed { index, it ->
-                    val moduleTitle = it.title
-                    val content = it.content
-                    val description = it.shortDescription
-                    val moduleId = it.id
-                    val moduleContent = ModuleContent(
+            var sequence = 0
+            course.sections.forEach { sctn ->
+                sequence
+                val sectionTitle = sctn.title
+                val sectionId = sctn.id
+                sctn.modules.forEach { mdl ->
+                    sequence += 1
+                    val moduleTitle = mdl.title
+                    val content = mdl.content
+                    val description = mdl.shortDescription
+                    val moduleId = mdl.id
+                    val moduleContent = ModuleAudio(
                         _newCourseId.value,
                         moduleId,
+                        sectionId,
                         courseTitle,
                         sectionTitle,
                         moduleTitle,
                         description,
                         content,
-                        index + 1
+                        sequence,
+                        ""
                     )
                     moduleContents.add(moduleContent)
                 }
