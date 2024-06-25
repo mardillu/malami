@@ -74,6 +74,12 @@ class AppNavigation(
         }
     }
 
+    fun gotoSettings() {
+        navController.navigate(NavRoutes.Settings.route) {
+            //popUpTo(0) { inclusive = true }
+        }
+    }
+
 
 //    fun gotoForgotPassword() {
 //        navController.navigate(NavRoutes.ForgotPassword.route) {

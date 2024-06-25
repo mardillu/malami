@@ -12,6 +12,7 @@ import com.mardillu.malami.ui.courses.player.AudioPlayerScreen
 import com.mardillu.malami.ui.courses.quiz.QuizResultScreen
 import com.mardillu.malami.ui.courses.quiz.TakeQuizScreen
 import com.mardillu.malami.ui.onboarding.OnboardingScreen
+import com.mardillu.malami.ui.settings.SettingsScreen
 import com.mardillu.player_service.service.AudioPlayerService
 
 /**
@@ -108,5 +109,9 @@ fun NavGraphBuilder.appNavGraph(
             startService,
             hiltViewModel()
         )
+    }
+
+    composable(NavRoutes.Settings.route) {
+        SettingsScreen()
     }
 }

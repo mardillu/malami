@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -80,8 +81,10 @@ fun CourseListScreen(
             TopAppBar(
                 title = { Text("Courses") },
                 actions = {
-                    IconButton(onClick = { /*TODO*/ }) {
-                        Icon(Icons.Filled.Search, contentDescription = "Search")
+                    IconButton(onClick = {
+                        navigation.gotoSettings()
+                    }) {
+                        Icon(Icons.Filled.Settings, contentDescription = "Search")
                     }
                     IconButton(onClick = {
                         navigation.gotoCreateCourse()
