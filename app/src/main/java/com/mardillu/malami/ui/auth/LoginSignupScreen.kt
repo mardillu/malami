@@ -52,6 +52,7 @@ import com.mardillu.auth_with_google.OneTapGoogleButton
 import com.mardillu.malami.BuildConfig
 import com.mardillu.malami.R
 import com.mardillu.malami.ui.navigation.AppNavigation
+import com.mardillu.malami.ui.navigation.NavRoutes
 import kotlinx.coroutines.launch
 
 /**
@@ -219,7 +220,7 @@ fun LoginSignupScreen(
                 if ((authState as AuthState.Authenticated).through == "login") {
                     navigation.gotToCourseList()
                 } else if ((authState as AuthState.Authenticated).through == "signup") {
-                    navigation.goToOnboarding()
+                    navigation.goToOnboarding(NavRoutes.Onboarding.route)
                 }
             }
 

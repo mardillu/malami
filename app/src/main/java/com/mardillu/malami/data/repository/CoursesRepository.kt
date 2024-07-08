@@ -14,16 +14,22 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Source
 import com.mardillu.malami.data.model.course.Course
+import com.mardillu.malami.data.model.course.GenerateContentRequest
 import com.mardillu.malami.data.model.course.LearningSchedule
+import com.mardillu.malami.data.model.course.MlGenerateContentResponse
 import com.mardillu.malami.data.model.course.Module
 import com.mardillu.malami.data.model.course.Quiz
 import com.mardillu.malami.data.model.course.QuizAttempt
 import com.mardillu.malami.data.model.course.Section
 import com.mardillu.malami.data.model.course.UserCourses
+import com.mardillu.malami.network.GeminiApiService
+import com.mardillu.malami.network.NetworkResult
+import com.mardillu.malami.network.makeRequestToApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.tasks.await
+import retrofit2.Response
 import javax.inject.Inject
 
 /**
@@ -32,7 +38,8 @@ import javax.inject.Inject
  */
 class CoursesRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    private val geminiApiService: GeminiApiService
 ) {
     private val _userCoursesFlow = MutableStateFlow<List<Course>>(emptyList())
     val userCoursesFlow: StateFlow<List<Course>> get() = _userCoursesFlow
@@ -46,7 +53,7 @@ class CoursesRepository @Inject constructor(
                 temperature = 1f
                 topK = 64
                 topP = 0.95f
-                maxOutputTokens = 500_000
+                maxOutputTokens = 700_000
                 responseMimeType = "application/json"
             },
             safetySettings = listOf(
@@ -74,6 +81,38 @@ class CoursesRepository @Inject constructor(
         //println(response.text)
         // Alternatively
         //println(response.candidates.first().content.parts.first().asTextOrNull())
+    }
+
+    suspend fun createCourseCustom(prompt: String, geminiApiKey: String): NetworkResult<Response<MlGenerateContentResponse>> {
+        val request = GenerateContentRequest(
+            contents = listOf(content { text(prompt) }),
+            generationConfig = generationConfig {
+                temperature = 1f
+                topK = 64
+                topP = 0.95f
+                maxOutputTokens = 700_000
+                responseMimeType = "application/json"
+            },
+//            safetySettings = listOf(
+//                SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.MEDIUM_AND_ABOVE),
+//                SafetySetting(HarmCategory.HATE_SPEECH, BlockThreshold.MEDIUM_AND_ABOVE),
+//                SafetySetting(HarmCategory.SEXUALLY_EXPLICIT, BlockThreshold.MEDIUM_AND_ABOVE),
+//                SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.MEDIUM_AND_ABOVE),
+//            ),
+            systemInstruction = content {
+                text(
+                    "You are an AI instructor. You create custom, full content " +
+                            "courses with quizzes for people based on their specific learning styles and a " +
+                            "learning plan to complete the course. Courses are broken down into sections, " +
+                            "then modules. Each section comes with a quiz"
+                )
+            },
+        )
+
+        val response = makeRequestToApi {
+            geminiApiService.generateCompletion(geminiApiKey, request,)
+        }
+        return response
     }
 
     suspend fun saveCourse(course: List<Course>): Result<Unit>  {
@@ -133,7 +172,8 @@ class CoursesRepository @Inject constructor(
                                     modules = modulesList,
                                     quiz = quizList,
                                     shortDescription = sectionMap["shortDescription"] as String,
-                                    title = sectionMap["title"] as String
+                                    title = sectionMap["title"] as String,
+                                    aiExplainability = sectionMap["aiExplainability"] as String
                                 )
                             }
                         val course = Course(
@@ -260,7 +300,8 @@ class CoursesRepository @Inject constructor(
                                 modules = modulesList,
                                 quiz = quizList,
                                 shortDescription = sectionMap["shortDescription"] as String,
-                                title = sectionMap["title"] as String
+                                title = sectionMap["title"] as String,
+                                aiExplainability = sectionMap["aiExplainability"] as String
                             )
                         }
                     val course = Course(

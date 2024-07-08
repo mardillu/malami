@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -25,14 +28,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
 import com.mardillu.malami.data.model.course.Module
 import com.mardillu.malami.ui.courses.list.CourseListViewModel
 import com.mardillu.malami.ui.navigation.AppNavigation
-import io.noties.markwon.Markwon
+import dev.jeziellago.compose.markdowntext.MarkdownText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,6 +65,13 @@ fun ModuleContentScreen(
                         overflow = TextOverflow.Ellipsis
                     )
                 },
+                actions = {
+                    IconButton(onClick = {
+                        //navigation.gotoSettings()
+                    }) {
+                        Icon(Icons.Filled.PlayArrow, contentDescription = "Listen")
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = { navigation.back() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -84,35 +96,32 @@ fun ModuleContent(moduleIndex: Int, module: Module, it: PaddingValues) {
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-        MarkdownText(
+        MlMarkdownText(
             text = module.content,
             //style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-        Button(
-            onClick = { /* Handle listen action */ },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Listen to Module")
-        }
     }
 }
 
+
+
 @Composable
-fun MarkdownText(
+fun MlMarkdownText(
     text: String,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val markwon = remember { Markwon.create(context) }
+    MarkdownText(
+        modifier = modifier,
+        markdown = text,
+//        maxLines = 3,
+//        fontResource = R.font.montserrat_medium,
+//        style = TextStyle(
+//            color = Color.Blue,
+//            fontSize = 12.sp,
+//            lineHeight = 10.sp,
+//            textAlign = TextAlign.Justify,
+//        ),
 
-    AndroidView(
-        factory = { ctx ->
-            TextView(ctx).apply {
-                textSize = 16f
-                markwon.setMarkdown(this, text)
-            }
-        },
-        modifier = modifier.fillMaxWidth()
     )
 }

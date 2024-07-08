@@ -11,7 +11,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mardillu.malami.data.model.UserPreferences
 import com.mardillu.malami.data.repository.PreferencesRepository
-import com.mardillu.malami.ui.courses.create.CreateCourseState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,6 +35,9 @@ class OnboardingViewModel @Inject constructor(
     //var assessmentPreferences by mutableStateOf("")
     var specialRequirements by mutableStateOf("")
 
+    init {
+        getUserPreferences()
+    }
     fun savePreferences() {
         _onboardState.value = OnboardState.Loading
         val userPreferences = UserPreferences(
@@ -76,6 +78,25 @@ class OnboardingViewModel @Inject constructor(
 
     fun setOnboardStateIdle() {
         _onboardState.value = OnboardState.Idle
+    }
+
+    private fun getUserPreferences() {
+        viewModelScope.launch {
+            val userPreferenceResult = preferencesRepository.getUserPreferences()
+            userPreferenceResult.getOrNull()?.let { userPreference ->
+                learningStyle = userPreference.learningStyle
+                paceOfLearning = userPreference.paceOfLearning
+                studyTime = userPreference.studyTime
+                //contentFormat = userPreference.contentFormat
+                readingSpeed = userPreference.readingSpeed
+                difficultyLevel = userPreference.difficultyLevel
+                feedbackType = userPreference.feedbackType
+                //assessmentPreferences = userPreference.assessmentPreferences
+                specialRequirements = userPreference.specialRequirements
+            } ?: run {
+                //_onboardState.value = OnboardState.Error("Failed to get user preferences.")
+            }
+        }
     }
 }
 

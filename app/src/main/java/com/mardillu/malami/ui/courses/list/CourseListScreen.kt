@@ -212,9 +212,9 @@ fun CourseListContent(
                             rowCourses.forEach { course ->
                                 Box(
                                     modifier = Modifier
-                                        .weight(1f)
+                                        .weight(1f / (rowCourses.size.toFloat()))
                                 ) {
-                                    CourseListItem(course, navigation)
+                                    CourseListItem(course, navigation, selectedViewType)
                                 }
                             }
                         }
@@ -301,7 +301,7 @@ fun CompactCourseListItem(course: Course, navigation: AppNavigation,) {
 
 
 @Composable
-fun CourseListItem(course: Course, navigation: AppNavigation,) {
+fun CourseListItem(course: Course, navigation: AppNavigation, selectedViewType: CourseListViewType) {
     Card(
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
@@ -320,7 +320,7 @@ fun CourseListItem(course: Course, navigation: AppNavigation,) {
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp)
+                    .height(if(selectedViewType == CourseListViewType.Grid) 100.dp else 180.dp)
                     .clip(
                         RoundedCornerShape(
                             topStart = 16.dp,

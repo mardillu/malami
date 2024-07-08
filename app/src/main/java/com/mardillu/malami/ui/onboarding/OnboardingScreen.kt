@@ -13,12 +13,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -43,6 +46,7 @@ import com.mardillu.malami.utils.AppAlertDialog
 fun OnboardingScreen(
     navigation: AppNavigation,
     viewModel: OnboardingViewModel,
+    onSubmit: (() -> Unit)? = null
     ) {
 
     val createCourseState by viewModel.onboardState.collectAsState()
@@ -50,13 +54,22 @@ fun OnboardingScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Onboarding Questionnaire") }
+                title = { Text("Learning style") },
+                navigationIcon = {
+                    if(onSubmit != null) {
+                        IconButton(onClick = {
+                            navigation.back()
+                        }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    }
+                }
             )
         },
         bottomBar = {
             BottomAppBar(
                 containerColor = Color.Transparent,
-                contentColor =  Color.Transparent,
+                contentColor = Color.Transparent,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
@@ -91,7 +104,12 @@ fun OnboardingScreen(
                         ) {
                             Text("Preferred Learning Style:")
                             RadioButtonGroup(
-                                options = listOf("Visual", "Auditory", "Kinesthetic", "Reading/Writing"),
+                                options = listOf(
+                                    "Visual",
+                                    "Auditory",
+                                    "Kinesthetic",
+                                    "Reading/Writing"
+                                ),
                                 selectedOption = viewModel.learningStyle,
                                 onOptionSelected = { viewModel.learningStyle = it }
                             )
@@ -230,7 +248,7 @@ fun OnboardingScreen(
         }
 
         is OnboardState.Success -> {
-            navigation.gotToCourseList()
+            onSubmit?.invoke()
         }
 
         is OnboardState.Error -> {

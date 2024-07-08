@@ -13,7 +13,6 @@ import com.mardillu.malami.ui.courses.quiz.QuizResultScreen
 import com.mardillu.malami.ui.courses.quiz.TakeQuizScreen
 import com.mardillu.malami.ui.onboarding.OnboardingScreen
 import com.mardillu.malami.ui.settings.SettingsScreen
-import com.mardillu.player_service.service.AudioPlayerService
 
 /**
  * Created on 19/05/2024 at 7:33 pm
@@ -32,7 +31,15 @@ fun NavGraphBuilder.appNavGraph(
     }
 
     composable(NavRoutes.Onboarding.route) {
-        OnboardingScreen(navigation, hiltViewModel())
+        OnboardingScreen(navigation, hiltViewModel()) {
+            navigation.gotToCourseList()
+        }
+    }
+
+    composable(NavRoutes.Onboarding2.route) {
+        OnboardingScreen(navigation, hiltViewModel()) {
+            navigation.back()
+        }
     }
 
     composable(NavRoutes.CourseList.route) {
@@ -112,6 +119,6 @@ fun NavGraphBuilder.appNavGraph(
     }
 
     composable(NavRoutes.Settings.route) {
-        SettingsScreen()
+        SettingsScreen(navigation, hiltViewModel())
     }
 }

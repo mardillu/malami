@@ -26,9 +26,9 @@ class AppNavigation(
         }
     }
 
-    fun goToOnboarding() {
-        navController.navigate(NavRoutes.Onboarding.route) {
-            popUpTo(0) { inclusive = true }
+    fun goToOnboarding(route: String, back: Boolean = false) {
+        navController.navigate(route) {
+            if (!back) popUpTo(0) { inclusive = true }
         }
     }
 

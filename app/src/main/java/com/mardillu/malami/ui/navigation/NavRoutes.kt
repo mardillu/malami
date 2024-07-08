@@ -7,6 +7,7 @@ package com.mardillu.malami.ui.navigation
 sealed class NavRoutes(val route: String) {
     data object Login : NavRoutes("/login")
     data object Onboarding : NavRoutes("/onboarding")
+    data object Onboarding2 : NavRoutes("/onboarding-2")
     data object Home : NavRoutes("/home")
     data object CourseList : NavRoutes("/course-list")
     data object Modules : NavRoutes("/modules")

@@ -9,6 +9,7 @@ import androidx.work.WorkManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.mardillu.malami.data.PreferencesManager
+import com.mardillu.malami.network.GeminiApiService
 import com.mardillu.malami.network.TTSApiService
 import dagger.Module
 import dagger.Provides
@@ -45,6 +46,12 @@ object AppModule {
     @Singleton
     fun provideTextToSpeechApi(preferencesManager: PreferencesManager): TTSApiService {
         return TTSApiService(preferencesManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGeminiApiService(preferencesManager: PreferencesManager): GeminiApiService {
+        return GeminiApiService(preferencesManager)
     }
 
     @Provides

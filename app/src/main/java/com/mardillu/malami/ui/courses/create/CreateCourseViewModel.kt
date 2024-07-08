@@ -10,13 +10,19 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import com.google.ai.client.generativeai.type.GenerateContentResponse
+import com.google.ai.client.generativeai.type.Candidate
+import com.google.ai.client.generativeai.type.CodeExecutionResultPart
+import com.google.ai.client.generativeai.type.ExecutableCodePart
+import com.google.ai.client.generativeai.type.TextPart
 import com.google.gson.Gson
 import com.mardillu.malami.data.model.UserPreferences
 import com.mardillu.malami.data.model.course.Course
+import com.mardillu.malami.data.model.course.MlCandidate
+import com.mardillu.malami.data.model.course.MlGenerateContentResponse
 import com.mardillu.malami.data.model.course.ModuleAudio
 import com.mardillu.malami.data.repository.CoursesRepository
 import com.mardillu.malami.data.repository.PreferencesRepository
+import com.mardillu.malami.network.NetworkResult
 import com.mardillu.malami.ui.courses.quiz.UIState
 import com.mardillu.malami.utils.add
 import com.mardillu.malami.utils.addAll
@@ -103,11 +109,12 @@ class CreateCourseViewModel @Inject constructor(
                     frequency: daily or weekly,
                     day: day of week, or null of daily
                 },
-                sections:[
+                sections:[ // minimum 5 of sections
                     {
                         title: title,
                         shortDescription: short description,
-                        modules: [
+                        aiExplainability: briefly explain how the choice of this section contents were made.
+                        modules: [ // minimum of 5 modules
                             {
                                 title: title,
                                 shortDescription: short description,
@@ -133,23 +140,41 @@ class CreateCourseViewModel @Inject constructor(
     private fun createCourse(geminiAPIKey: String) {
         viewModelScope.launch {
             runCatching {
-                val newCourse = courseRepository.createCourse(userPrompt, geminiAPIKey)
-                newCourse.getOrThrow().let {
-                    if (it.text == null) {
-                        throw IllegalStateException("Failed to create course")
-                    } else {
-                        val course = Json.decodeFromString<Course>(it.text!!)
+                val newCourseResult = courseRepository.createCourseCustom(userPrompt, geminiAPIKey)
+                if (newCourseResult is NetworkResult.Success) {
+                    newCourseResult.data?.body()?.let { responseBody ->
+                        val text = getCandidateText(responseBody.candidates)
+                        val course = Gson().fromJson(text, Course::class.java)
+                        //val course = Json.decodeFromString<Course>(text)
                         _newCourseId.update { course.id }
-                        getCourses(course, it)
-                    }
+                        getCourses(course, responseBody)
+                    } ?: throw IllegalStateException("Response body is null")
+                } else {
+                    throw IllegalStateException("Failed to create course")
                 }
-            }.onFailure {
-                _createCourseState.value = CreateCourseState.Error(it.message ?: "Unknown error")
+            }.onFailure { exception ->
+                _createCourseState.value = CreateCourseState.Error(exception.message ?: "Unknown error")
             }
         }
     }
 
-    private fun saveCourse(course: List<Course>, response: GenerateContentResponse) {
+    private fun getCandidateText(candidates: List<MlCandidate>): String{
+        return candidates
+            .first()
+            .content
+            .parts
+            .filter { it is TextPart || it is ExecutableCodePart || it is CodeExecutionResultPart }
+            .joinToString(" ") {
+                when (it) {
+                    is TextPart -> it.text
+                    is ExecutableCodePart -> "\n```${it.language.lowercase()}\n${it.code}\n```"
+                    is CodeExecutionResultPart -> "\n```\n${it.output}\n```"
+                    else -> throw RuntimeException("unreachable")
+                }
+            }
+    }
+
+    private fun saveCourse(course: List<Course>, response: MlGenerateContentResponse) {
         viewModelScope.launch {
             runCatching {
                 val saveResult = courseRepository.saveCourse(course)
@@ -223,7 +248,7 @@ class CreateCourseViewModel @Inject constructor(
         _createCourseState.value = CreateCourseState.Idle
     }
 
-    private fun getCourses(course: Course, response: GenerateContentResponse) {
+    private fun getCourses(course: Course, response: MlGenerateContentResponse) {
         viewModelScope.launch {
             val userCourses = courseRepository.getCourses(false)
             userCourses.getOrNull()?.let { courses ->
@@ -241,6 +266,6 @@ class CreateCourseViewModel @Inject constructor(
 sealed class CreateCourseState {
     data object Idle : CreateCourseState()
     data object Loading : CreateCourseState()
-    data class Success(val course: GenerateContentResponse) : CreateCourseState()
+    data class Success(val course: MlGenerateContentResponse) : CreateCourseState()
     data class Error(val message: String) : CreateCourseState()
 }

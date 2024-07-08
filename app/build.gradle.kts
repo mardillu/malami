@@ -60,6 +60,8 @@ android {
             buildConfigField("String", "GEMINI_API_KEY", geminiApiKey)
             buildConfigField("String", "CLOUD_SPEECH_API_KEY", cloudSpeechApiKey)
             buildConfigField("String", "LOGIN_WITH_GOOGLE_WEB_CLIENT_ID", loginWithGoogleWebClientId)
+            manifestPlaceholders["appAuthRedirectScheme"] = "com.mardillu.malami"
+            resValue("String", "name", "value")
         }
 
         debug {
@@ -68,6 +70,8 @@ android {
             buildConfigField("String", "LOGIN_WITH_GOOGLE_WEB_CLIENT_ID", loginWithGoogleWebClientId)
         }
     }
+    flavorDimensions("version")
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -113,7 +117,7 @@ dependencies {
     implementation(libs.org.jetbrains.kotlinx.coroutines.core)
     implementation(libs.generativeai)
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.markdown.core)
+    //implementation(libs.markdown.core)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.common)
     implementation(libs.androidx.hilt.work)
@@ -127,6 +131,7 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.logging.interceptor)
     implementation(project(":simple-image-generator"))
+    implementation(libs.compose.markdown)
 
     //implementation(libs.onetapcompose)
 

@@ -10,5 +10,6 @@ data class Section(
     val modules: List<Module>,
     val quiz: List<Quiz>,
     val shortDescription: String,
-    val title: String
+    val title: String,
+    val aiExplainability: String
 )

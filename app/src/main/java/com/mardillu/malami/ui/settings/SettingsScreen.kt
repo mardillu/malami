@@ -1,5 +1,10 @@
 package com.mardillu.malami.ui.settings
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,11 +35,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mardillu.malami.R
+import com.mardillu.malami.ui.auth.AuthViewModel
+import com.mardillu.malami.ui.navigation.AppNavigation
+import com.mardillu.malami.ui.navigation.NavRoutes
 
 
 /**
@@ -44,34 +53,58 @@ import com.mardillu.malami.R
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Preview(showBackground = true,)
-fun SettingsScreen() {
+fun SettingsScreen(
+    navigation: AppNavigation,
+    authViewModel: AuthViewModel
+) {
+    val context = LocalContext.current
     val settingsItems = listOf(
         SettingItem(title = "General Settings", isHeader = true),
-        SettingItem(R.drawable.ic_learning, "Learning Style", "Update your learning style"),
-        SettingItem(R.drawable.ic_notifications, "Notifications", "Reminders and more"),
+        SettingItem(R.drawable.ic_learning, "Learning Style", "Update your learning style", onClick = {
+            navigation.goToOnboarding(NavRoutes.Onboarding2.route, true)
+        }),
+        SettingItem(R.drawable.ic_notifications, "Notifications", "Reminders and more", onClick = {
+            openNotificationSettings(context)
+        }),
         SettingItem(
             R.drawable.outline_security_24,
             "Privacy policy",
-            "Learn more about our privacy policy"
+            "Learn more about our privacy policy",
+            onClick = {
+                openUrl(context, "https://your-privacy-policy-url.com")
+            }
         ),
         SettingItem(
             R.drawable.outline_policy_24,
             "Terms of service",
-            "Learn more about our terms of service"
+            "Learn more about our terms of service",
+            onClick = {
+                openUrl(context, "https://your-privacy-policy-url.com")
+            }
         ),
         SettingItem(
             R.drawable.outline_help_outline_24,
             "Help",
             "Help centre, contact us, and more"
         ),
-        SettingItem(R.drawable.baseline_share_24, "Invite a friend"),
+        SettingItem(R.drawable.baseline_share_24, "Invite a friend", onClick = {
+            shareApp(context, "Check out this amazing app: https://your-app-download-link.com")
+        }),
+//        SettingItem(R.drawable.baseline_info_24, "About", "Learn more about Malami", onClick = {
+//            navigation.goToOnboarding(NavRoutes.Onboarding2.route)
+//        })
     )
 
     val dangerousSettings = listOf(
-        SettingItem(title = "Dangerous area", isHeader = true),
-        SettingItem(R.drawable.baseline_logout_24, "Logout"),
-        SettingItem(R.drawable.outline_delete_forever_24, "Delete account")
+        SettingItem(title = "Danger zone", isHeader = true),
+        SettingItem(R.drawable.baseline_logout_24, "Logout", onClick = {
+            authViewModel.logout()
+            navigation.gotoLoginSignup()
+        }),
+        SettingItem(R.drawable.outline_delete_forever_24, "Delete account", onClick = {
+            //authViewModel.deleteAccount()
+            navigation.gotoLoginSignup()
+        })
     )
 
     Scaffold(
@@ -145,16 +178,17 @@ fun UserProfileSection() {
 }
 
 @Composable
-fun SettingsItem(item: SettingItem, dangerous: Boolean, onClick: () -> Unit = {}) {
+fun SettingsItem(item: SettingItem, dangerous: Boolean,) {
     Row(
         modifier = if (item.isHeader) {
             Modifier
                 .fillMaxWidth()
+                .padding(start = 16.dp)
         } else {
             Modifier
                 .fillMaxWidth()
                 .clickable {
-                    onClick()
+                    item.onClick?.invoke()
                 }
         },
         verticalAlignment = Alignment.CenterVertically
@@ -192,9 +226,37 @@ fun SettingsItem(item: SettingItem, dangerous: Boolean, onClick: () -> Unit = {}
     }
 }
 
+fun openNotificationSettings(context: Context) {
+    val intent = Intent()
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        intent.action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
+        intent.putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+    } else {
+        intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+        intent.data = Uri.fromParts("package", context.packageName, null)
+    }
+
+    context.startActivity(intent)
+}
+
+fun openUrl(context: Context, url: String) {
+    val intent = Intent(Intent.ACTION_VIEW)
+    intent.data = Uri.parse(url)
+    context.startActivity(intent)
+}
+
+fun shareApp(context: Context, text: String) {
+    val intent = Intent(Intent.ACTION_SEND)
+    intent.type = "text/plain"
+    intent.putExtra(Intent.EXTRA_TEXT, text)
+    context.startActivity(Intent.createChooser(intent, "Share via"))
+}
+
+
 data class SettingItem(
     val icon: Int? = null,
     val title: String,
     val subtitle: String? = null,
     val isHeader: Boolean = false,
+    val onClick: (() -> Unit)? = null
 )

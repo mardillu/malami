@@ -180,7 +180,7 @@ fun CreateCourseScreen(navigation: AppNavigation,
                 }
                 item {
                     Text(
-                        text = "Prior Knowledge:",
+                        text = "Prior Knowledge",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -214,12 +214,6 @@ fun CreateCourseScreen(navigation: AppNavigation,
                 }
                 is CreateCourseState.Success -> {
                     showBottomSheet = false
-                    Text(
-                        text = "Course created successfully!",
-                        color = MaterialTheme.colorScheme.tertiary,
-                        fontSize = 16.sp,
-                        modifier = Modifier.padding(top = 16.dp)
-                    )
                     navigation.back()
                 }
                 is CreateCourseState.Error -> {
