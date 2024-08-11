@@ -1,16 +1,17 @@
 package com.mardillu.malami.network
 
-import com.google.ai.client.generativeai.type.GenerateContentResponse
 import com.google.ai.client.generativeai.type.Part
 import com.google.ai.client.generativeai.type.TextPart
-import com.google.gson.*
-import java.lang.reflect.Type
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
+import com.google.gson.JsonSerializationContext
+import com.google.gson.JsonSerializer
 import com.mardillu.malami.BuildConfig
 import com.mardillu.malami.data.PreferencesManager
 import com.mardillu.malami.data.model.course.GenerateContentRequest
 import com.mardillu.malami.data.model.course.MlGenerateContentResponse
-import com.mardillu.malami.data.model.course.OpenAIContentRequest
-import com.mardillu.malami.data.model.course.PartImpl
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Response
@@ -19,6 +20,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.http.Query
+import java.lang.reflect.Type
 import java.util.concurrent.TimeUnit
 
 /**

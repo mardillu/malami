@@ -151,12 +151,13 @@ class AudioPlayerViewModel @Inject constructor(
         remainderString = formatDuration(duration - currentProgress)
     }
 
-    private fun loadData() {
+    private fun loadData(outputDir: String) {
         val mediaItemList = mutableListOf<MediaItem>()
         _audioFiles.value.sortedBy { it.sequence }.forEach {
             mediaItemList.add(
                 MediaItem.Builder()
-                    .setUri(it.audioUri)
+                    //not sure why the audioUri is sometimes empty, but a hacky fix
+                    .setUri(if(it.audioUri!="") it.audioUri else outputDir + "/${it.courseId}/audio_audio_${it.moduleId}.wav")
                     .setMediaMetadata(MediaMetadata.Builder()
                         .setIsBrowsable(true)
                         .setMediaType(MediaMetadata.MEDIA_TYPE_FOLDER_ALBUMS)
@@ -179,7 +180,7 @@ class AudioPlayerViewModel @Inject constructor(
         serviceHandler.addMediaItemList(mediaItemList)
     }
 
-    fun loadCourseAudios(courseId: String, outputDir: File) {
+    fun loadCourseAudios(courseId: String, outputDir: String) {
         viewModelScope.launch {
             val audios = preferencesManager.savedCourseAudios
             val courseContent = audios.filter { it.courseId == courseId }
@@ -189,7 +190,7 @@ class AudioPlayerViewModel @Inject constructor(
             }
 
             _audioFiles.value = courseContent
-            loadData()
+            loadData(outputDir)
         }
     }
 
@@ -255,54 +256,6 @@ class AudioPlayerViewModel @Inject constructor(
                         workRequest,
                     )
                 }
-            }
-        }
-    }
-
-
-    private fun convertTextToWav(courseId: String, outputDir: File) {
-        viewModelScope.launch {
-            val userCourses = coursesRepository.getCourses(true)
-            userCourses.getOrNull()?.let { courses ->
-                val course = courses.find { it.id == courseId }
-                val moduleContents = mutableListOf<ModuleAudio>()
-                course?.let { course ->
-                    val courseTitle = course.title
-                    var sequence = 0
-                    course.sections.forEach { sctn ->
-                        sequence += 1
-                        val sectionTitle = sctn.title
-                        val sectionId = sctn.id
-                        sctn.modules.forEach { mdl ->
-                            val moduleTitle = mdl.title
-                            val content = mdl.content
-                            val description = mdl.shortDescription
-                            val moduleId = mdl.id
-                            val moduleContent = ModuleAudio(
-                                courseId,
-                                moduleId,
-                                sectionId,
-                                courseTitle,
-                                sectionTitle,
-                                moduleTitle,
-                                description,
-                                content,
-                                sequence,
-                                ""
-                            )
-                            moduleContents.add(moduleContent)
-                        }
-                    }
-                    val (audios, _) = audioRepository.convertTextToWavLocal(moduleContents, outputDir)
-                    _audioFiles.value = audios
-                    val updatedAudios = preferencesManager.savedCourseAudios.addAll(audios)
-                    preferencesManager.savedCourseAudios = updatedAudios
-                    loadData()
-                } ?: run {
-                    Log.d("AudioPlayerViewModel", "Course not found")
-                }
-            } ?: run {
-                Log.d("getCourses", "Course not found 2")
             }
         }
     }

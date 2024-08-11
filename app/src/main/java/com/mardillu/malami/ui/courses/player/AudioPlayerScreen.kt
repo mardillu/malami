@@ -60,7 +60,7 @@ fun AudioPlayerScreen(
     viewModel: AudioPlayerViewModel
 ) {
     val context = LocalContext.current
-    val cacheDir = context.filesDir
+    val cacheDir = context.filesDir.absolutePath
 
     LaunchedEffect(true) {
         if(!viewModel.isPlaying) {

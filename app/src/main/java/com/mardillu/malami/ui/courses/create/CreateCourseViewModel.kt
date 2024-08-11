@@ -100,7 +100,6 @@ class CreateCourseViewModel @Inject constructor(
             for each of the modules for the person to read, (not bullet point guides). 
             Your response should be in json, you should escape any special characters like single and double quotes in the json, the json keys should be in camel case and the json should exactly match this json structure:
             {
-                id: abc-123-def, //uuid
                 title: title,
                 shortDescription: short description,
                 courseOutline: *course outline in markdown*,
@@ -112,13 +111,10 @@ class CreateCourseViewModel @Inject constructor(
                 },
                 sections:[
                     {
-                        id: abc-123-def, //uuid
                         title: title,
                         shortDescription: short description,
-                        aiExplainability: briefly explain how the choice of this section contents were made.
                         modules: [
                             {
-                                id: abc-123-def, //uuid
                                 title: title,
                                 shortDescription: short description,
                                 content: module content in markdown,
@@ -128,7 +124,6 @@ class CreateCourseViewModel @Inject constructor(
                         ]
                         quiz: [ // 5 or more questions
                             {
-                                id: abc-123-def, //uuid
                                 question: question,
                                 options: [exactly 4 options],
                                 answer: correct answer
@@ -148,8 +143,8 @@ class CreateCourseViewModel @Inject constructor(
                 if (newCourseResult is NetworkResult.Success) {
                     newCourseResult.data?.body()?.let { responseBody ->
                         val text = getCandidateText(responseBody.candidates)
-                        val course = Gson().fromJson(text, Course::class.java)
-                        //val course = Json.decodeFromString<Course>(text)
+                        //val course = Gson().fromJson(text, Course::class.java)
+                        val course = Json.decodeFromString<Course>(text)
                         _newCourseId.update { course.id }
                         getCourses(course, responseBody)
                     } ?: throw IllegalStateException("Response body is null")

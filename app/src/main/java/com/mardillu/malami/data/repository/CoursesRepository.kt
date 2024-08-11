@@ -18,8 +18,6 @@ import com.mardillu.malami.data.model.course.GenerateContentRequest
 import com.mardillu.malami.data.model.course.LearningSchedule
 import com.mardillu.malami.data.model.course.MlGenerateContentResponse
 import com.mardillu.malami.data.model.course.Module
-import com.mardillu.malami.data.model.course.OpenAIContentRequest
-import com.mardillu.malami.data.model.course.OpenAIMessage
 import com.mardillu.malami.data.model.course.Quiz
 import com.mardillu.malami.data.model.course.QuizAttempt
 import com.mardillu.malami.data.model.course.Section
@@ -82,17 +80,16 @@ class CoursesRepository @Inject constructor(
     }
 
     suspend fun createCourseCustom(prompt: String, geminiApiKey: String): NetworkResult<Response<MlGenerateContentResponse>> {
-        val systemText =  "You are an AI instructor. You create custom, full content " +
+        val systemText =  "You are an AI instructor. You create custom full " +
                 "courses with quizzes for people based on their specific learning styles and a " +
-                "learning plan to complete the course. Courses are broken down into sections, " +
-                "then modules. Each section comes with a quiz"
+                "learning plan to complete the course. The course should be broken down into sections, then modules."
         val request = GenerateContentRequest(
             contents = listOf(content { text(prompt) }),
             generationConfig = generationConfig {
                 temperature = 1f
                 topK = 64
                 topP = 0.95f
-                maxOutputTokens = 700_000
+                maxOutputTokens = 200_000
                 responseMimeType = "application/json"
             },
 //            safetySettings = listOf(
@@ -172,7 +169,6 @@ class CoursesRepository @Inject constructor(
                                     quiz = quizList,
                                     shortDescription = sectionMap["shortDescription"] as String,
                                     title = sectionMap["title"] as String,
-                                    aiExplainability = sectionMap["aiExplainability"] as String
                                 )
                             }
                         val course = Course(
@@ -300,7 +296,6 @@ class CoursesRepository @Inject constructor(
                                 quiz = quizList,
                                 shortDescription = sectionMap["shortDescription"] as String,
                                 title = sectionMap["title"] as String,
-                                aiExplainability = sectionMap["aiExplainability"] as String
                             )
                         }
                     val course = Course(

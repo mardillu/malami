@@ -219,7 +219,7 @@ fun CreateCourseScreen(navigation: AppNavigation,
                 is CreateCourseState.Error -> {
                     showBottomSheet = false
                     AppAlertDialog(
-                        dialogText = "Error creating course ${(createCourseState as CreateCourseState.Error).message}",
+                        dialogText = "Error creating course. You can try again now by clicking \"Create Course\" or later.",
                         onDismissRequest = {
                             viewModel.setCreateCourseStateIdle()
                         },
