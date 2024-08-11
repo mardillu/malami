@@ -100,6 +100,7 @@ class CreateCourseViewModel @Inject constructor(
             for each of the modules for the person to read, (not bullet point guides). 
             Your response should be in json, you should escape any special characters like single and double quotes in the json, the json keys should be in camel case and the json should exactly match this json structure:
             {
+                id: abc-123-def, //uuid
                 title: title,
                 shortDescription: short description,
                 courseOutline: *course outline in markdown*,
@@ -109,13 +110,15 @@ class CreateCourseViewModel @Inject constructor(
                     frequency: daily or weekly,
                     day: day of week, or null of daily
                 },
-                sections:[ // minimum 5 of sections
+                sections:[
                     {
+                        id: abc-123-def, //uuid
                         title: title,
                         shortDescription: short description,
                         aiExplainability: briefly explain how the choice of this section contents were made.
-                        modules: [ // minimum of 5 modules
+                        modules: [
                             {
+                                id: abc-123-def, //uuid
                                 title: title,
                                 shortDescription: short description,
                                 content: module content in markdown,
@@ -125,6 +128,7 @@ class CreateCourseViewModel @Inject constructor(
                         ]
                         quiz: [ // 5 or more questions
                             {
+                                id: abc-123-def, //uuid
                                 question: question,
                                 options: [exactly 4 options],
                                 answer: correct answer

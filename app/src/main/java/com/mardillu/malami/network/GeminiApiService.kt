@@ -9,6 +9,7 @@ import com.mardillu.malami.BuildConfig
 import com.mardillu.malami.data.PreferencesManager
 import com.mardillu.malami.data.model.course.GenerateContentRequest
 import com.mardillu.malami.data.model.course.MlGenerateContentResponse
+import com.mardillu.malami.data.model.course.OpenAIContentRequest
 import com.mardillu.malami.data.model.course.PartImpl
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -40,9 +41,6 @@ interface GeminiApiService {
                 addInterceptor { chain ->
                     val request = chain.request().newBuilder()
                         .header("Accept", "application/json")
-//                        .header("x-goog-api-key", "AIzaSyDKp_4dfkJlkt7rMmGeuHt_edPMhJcybGw")
-//                        .header("Authorization", "Bearer AIzaSyDKp_4dfkJlkt7rMmGeuHt_edPMhJcybGw")
-//                        .header("x-goog-api-client", "genai-android/${BuildConfig.VERSION_NAME}",)
                         .build()
 
                     chain.proceed(request)

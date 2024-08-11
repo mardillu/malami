@@ -18,6 +18,8 @@ import com.mardillu.malami.data.model.course.GenerateContentRequest
 import com.mardillu.malami.data.model.course.LearningSchedule
 import com.mardillu.malami.data.model.course.MlGenerateContentResponse
 import com.mardillu.malami.data.model.course.Module
+import com.mardillu.malami.data.model.course.OpenAIContentRequest
+import com.mardillu.malami.data.model.course.OpenAIMessage
 import com.mardillu.malami.data.model.course.Quiz
 import com.mardillu.malami.data.model.course.QuizAttempt
 import com.mardillu.malami.data.model.course.Section
@@ -77,13 +79,13 @@ class CoursesRepository @Inject constructor(
 
         val response = chat.sendMessage(prompt)
         return Result.success(response)
-        // Get the first text part of the first candidate
-        //println(response.text)
-        // Alternatively
-        //println(response.candidates.first().content.parts.first().asTextOrNull())
     }
 
     suspend fun createCourseCustom(prompt: String, geminiApiKey: String): NetworkResult<Response<MlGenerateContentResponse>> {
+        val systemText =  "You are an AI instructor. You create custom, full content " +
+                "courses with quizzes for people based on their specific learning styles and a " +
+                "learning plan to complete the course. Courses are broken down into sections, " +
+                "then modules. Each section comes with a quiz"
         val request = GenerateContentRequest(
             contents = listOf(content { text(prompt) }),
             generationConfig = generationConfig {
@@ -101,10 +103,7 @@ class CoursesRepository @Inject constructor(
 //            ),
             systemInstruction = content {
                 text(
-                    "You are an AI instructor. You create custom, full content " +
-                            "courses with quizzes for people based on their specific learning styles and a " +
-                            "learning plan to complete the course. Courses are broken down into sections, " +
-                            "then modules. Each section comes with a quiz"
+                    systemText
                 )
             },
         )
